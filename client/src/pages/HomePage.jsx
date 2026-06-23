@@ -89,10 +89,9 @@ function PlusIcon() {
   );
 }
 
-function HomePage() {
+function HomePage({ onOpenCreateQuiz }) {
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Все');
-  const [isCategoryFocused, setIsCategoryFocused] = useState(false);
 
   const filteredQuizzes = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -107,7 +106,6 @@ function HomePage() {
   }, [searchValue, selectedCategory]);
 
   const isSearchActive = searchValue.trim().length > 0;
-  const isCategoryActive = selectedCategory !== 'Все' && !isCategoryFocused;
 
   return (
     <div className="home-page">
@@ -121,7 +119,7 @@ function HomePage() {
           <button type="button" className="home-action home-action-light">
             Подключиться по коду
           </button>
-          <button type="button" className="home-action home-action-primary">
+          <button type="button" className="home-action home-action-primary" onClick={onOpenCreateQuiz}>
             <span className="home-action-icon">
               <PlusIcon />
             </span>
@@ -154,18 +152,12 @@ function HomePage() {
             </label>
 
             <label
-              className={`home-select-wrap${isCategoryActive ? ' is-active' : ''}`}
+              className="home-select-wrap"
               aria-label="Фильтр по категории"
             >
               <select
                 value={selectedCategory}
-                onPointerDown={() => setIsCategoryFocused(true)}
-                onFocus={() => setIsCategoryFocused(true)}
-                onBlur={() => setIsCategoryFocused(false)}
-                onChange={(event) => {
-                  setSelectedCategory(event.target.value);
-                  setIsCategoryFocused(false);
-                }}
+                onChange={(event) => setSelectedCategory(event.target.value)}
               >
                 {categories.map((category) => (
                   <option key={category} value={category}>

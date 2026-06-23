@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
+import CreateQuizPage from './pages/CreateQuizPage';
 
 function App() {
   const [page, setPage] = useState('landing');
@@ -27,8 +28,12 @@ function App() {
     );
   }
 
+  if (page === 'create-quiz') {
+    return <CreateQuizPage onOpenHome={() => setPage('home')} />;
+  }
+
   if (page === 'home') {
-    return <HomePage />;
+    return <HomePage onOpenCreateQuiz={() => setPage('create-quiz')} />;
   }
 
   return (
