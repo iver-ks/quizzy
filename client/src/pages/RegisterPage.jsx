@@ -41,7 +41,7 @@ function EyeIcon({ open }) {
   );
 }
 
-function RegisterPage({ onOpenLanding, onOpenLogin }) {
+function RegisterPage({ onOpenLanding, onOpenLogin, onOpenHome }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,7 +70,15 @@ function RegisterPage({ onOpenLanding, onOpenLogin }) {
             </p>
           </header>
 
-          <form className="register-form" onSubmit={(event) => event.preventDefault()}>
+          <form
+            className="register-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (onOpenHome) {
+                onOpenHome();
+              }
+            }}
+          >
             <div className="register-field-group">
               <label htmlFor="register-name">Имя</label>
               <div className="register-input-shell register-input-plain">
@@ -141,7 +149,9 @@ function RegisterPage({ onOpenLanding, onOpenLogin }) {
                   type="button"
                   className="register-password-toggle"
                   onClick={() => setRepeatPasswordVisible((value) => !value)}
-                  aria-label={repeatPasswordVisible ? 'Скрыть повтор пароля' : 'Показать повтор пароля'}
+                  aria-label={
+                    repeatPasswordVisible ? 'Скрыть повтор пароля' : 'Показать повтор пароля'
+                  }
                 >
                   <EyeIcon open={repeatPasswordVisible} />
                 </button>

@@ -41,7 +41,7 @@ function EyeIcon({ open }) {
   );
 }
 
-function LoginPage({ onOpenLanding, onOpenRegister }) {
+function LoginPage({ onOpenLanding, onOpenRegister, onOpenHome }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,7 +63,15 @@ function LoginPage({ onOpenLanding, onOpenRegister }) {
             </p>
           </header>
 
-          <form className="login-form" onSubmit={(event) => event.preventDefault()}>
+          <form
+            className="login-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (onOpenHome) {
+                onOpenHome();
+              }
+            }}
+          >
             <div className="login-field-group">
               <label htmlFor="login-email">Email</label>
               <div className="login-input-shell">
