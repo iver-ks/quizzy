@@ -6,28 +6,75 @@ const featureCards = [
     title: 'Подключение по коду',
     text: 'Участники могут присоединяться к приватным квизам по коду комнаты.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="none" stroke="#684FDC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="256"
+        height="256"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#684FDC"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <circle cx="9" cy="7" r="4" />
+      </svg>
     ),
   },
   {
     title: 'Автоматический ход игры',
     text: 'Вопросы переключаются автоматически по заданному времени.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="none" stroke="#684FDC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw-icon lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="256"
+        height="256"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#684FDC"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+        <path d="M21 3v5h-5" />
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+        <path d="M8 16H3v5" />
+      </svg>
     ),
   },
   {
     title: 'История результатов',
     text: 'Просматривайте свои результаты и итоги проведённых квизов.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="none" stroke="#684FDC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list-icon lucide-clipboard-list"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="256"
+        height="256"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#684FDC"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <path d="M12 11h4" />
+        <path d="M12 16h4" />
+        <path d="M8 11h.01" />
+        <path d="M8 16h.01" />
+      </svg>
     ),
   },
 ];
 
 const answers = ['Юпитер', 'Сатурн', 'Земля', 'Нептун'];
 
-function LandingPage() {
+function LandingPage({ onOpenLogin, onOpenRegister }) {
   return (
     <div className="landing-page">
       <header className="landing-header landing-container">
@@ -39,10 +86,10 @@ function LandingPage() {
         </div>
 
         <div className="landing-actions">
-          <button type="button" className="btn btn-outline">
+          <button type="button" className="btn btn-outline" onClick={onOpenLogin}>
             Войти
           </button>
-          <button type="button" className="btn btn-primary">
+          <button type="button" className="btn btn-primary" onClick={onOpenRegister}>
             Зарегистрироваться
           </button>
         </div>
@@ -57,7 +104,7 @@ function LandingPage() {
                 Quizzy превращает проверку знаний в динамичную игру, которую интересно
                 создавать, проходить и обсуждать после завершения.
               </p>
-              <button type="button" className="btn btn-primary hero-button">
+              <button type="button" className="btn btn-primary hero-button" onClick={onOpenLogin}>
                 Начать
               </button>
             </div>
