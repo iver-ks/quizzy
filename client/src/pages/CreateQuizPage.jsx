@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import logoIcon from '../assets/quizzy-logo.png';
 import '../styles/createQuiz.css';
 
@@ -51,9 +50,12 @@ function LockIcon() {
   );
 }
 
-function CreateQuizPage({ onOpenHome }) {
-  const [accessType, setAccessType] = useState('public');
-
+function CreateQuizPage({
+  quizDraft,
+  onChangeQuizDraft,
+  onOpenHome,
+  onOpenAddQuestions,
+}) {
   return (
     <div className="create-quiz-page">
       <header className="create-quiz-header create-quiz-container">
@@ -95,6 +97,13 @@ function CreateQuizPage({ onOpenHome }) {
                   id="quiz-title"
                   type="text"
                   placeholder="Например: История России XIX века"
+                  value={quizDraft.title}
+                  onChange={(event) =>
+                    onChangeQuizDraft((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))
+                  }
                 />
               </div>
 
@@ -103,13 +112,29 @@ function CreateQuizPage({ onOpenHome }) {
                 <textarea
                   id="quiz-description"
                   placeholder="Краткие описание квиза..."
+                  value={quizDraft.description}
+                  onChange={(event) =>
+                    onChangeQuizDraft((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
                 />
               </div>
 
               <div className="create-quiz-field">
                 <label htmlFor="quiz-category">Категория</label>
                 <div className="create-quiz-select-wrap">
-                  <select id="quiz-category" defaultValue="История">
+                  <select
+                    id="quiz-category"
+                    value={quizDraft.category}
+                    onChange={(event) =>
+                      onChangeQuizDraft((current) => ({
+                        ...current,
+                        category: event.target.value,
+                      }))
+                    }
+                  >
                     <option value="История">История</option>
                     <option value="Математика">Математика</option>
                     <option value="Другое">Другое</option>
@@ -126,9 +151,14 @@ function CreateQuizPage({ onOpenHome }) {
                   <button
                     type="button"
                     className={`create-quiz-access-card${
-                      accessType === 'public' ? ' is-active' : ''
+                      quizDraft.accessType === 'public' ? ' is-active' : ''
                     }`}
-                    onClick={() => setAccessType('public')}
+                    onClick={() =>
+                      onChangeQuizDraft((current) => ({
+                        ...current,
+                        accessType: 'public',
+                      }))
+                    }
                   >
                     <span className="create-quiz-access-icon">
                       <GlobeIcon />
@@ -142,9 +172,14 @@ function CreateQuizPage({ onOpenHome }) {
                   <button
                     type="button"
                     className={`create-quiz-access-card${
-                      accessType === 'private' ? ' is-active' : ''
+                      quizDraft.accessType === 'private' ? ' is-active' : ''
                     }`}
-                    onClick={() => setAccessType('private')}
+                    onClick={() =>
+                      onChangeQuizDraft((current) => ({
+                        ...current,
+                        accessType: 'private',
+                      }))
+                    }
                   >
                     <span className="create-quiz-access-icon">
                       <LockIcon />
@@ -161,7 +196,11 @@ function CreateQuizPage({ onOpenHome }) {
                 <button type="button" className="create-quiz-secondary-btn">
                   Сохранить черновик
                 </button>
-                <button type="submit" className="create-quiz-primary-btn">
+                <button
+                  type="button"
+                  className="create-quiz-primary-btn"
+                  onClick={onOpenAddQuestions}
+                >
                   <span>Перейти к вопросам</span>
                   <span className="create-quiz-primary-icon">
                     <ArrowRightIcon />
