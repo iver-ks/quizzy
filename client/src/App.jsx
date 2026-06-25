@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import CreateQuizPage from './pages/CreateQuizPage';
 import AddQuestionsPage from './pages/AddQuestionsPage';
 import WaitingRoomPage from './pages/WaitingRoomPage';
+import HostQuizPage from './pages/HostQuizPage';
 
 function App() {
   const [page, setPage] = useState('landing');
@@ -65,6 +66,16 @@ function App() {
       <WaitingRoomPage
         quizTitle={quizDraft.title}
         accessType={quizDraft.accessType}
+        onOpenHome={() => setPage('home')}
+        onOpenCreateQuiz={() => setPage('create-quiz')}
+        onOpenHostQuiz={() => setPage('host-quiz')}
+      />
+    );
+  }
+
+  if (page === 'host-quiz') {
+    return (
+      <HostQuizPage
         onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
       />

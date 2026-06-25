@@ -54,6 +54,7 @@ function WaitingRoomPage({
   accessType = 'public',
   onOpenHome,
   onOpenCreateQuiz,
+  onOpenHostQuiz,
 }) {
   const roomCode = useMemo(
     () => String(Math.floor(100000 + Math.random() * 900000)),
@@ -130,7 +131,7 @@ function WaitingRoomPage({
               ))}
             </div>
 
-            <button type="button" className="waiting-room-start-btn">
+            <button type="button" className="waiting-room-start-btn" onClick={onOpenHostQuiz}>
               <span className="waiting-room-start-icon">
                 <PlayIcon />
               </span>
