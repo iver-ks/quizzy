@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import logoIcon from '../assets/quizzy-logo.png';
+import JoinByCodeModal from './JoinByCodeModal';
 import '../styles/header.css';
 
 function PlusIcon() {
@@ -11,34 +13,44 @@ function PlusIcon() {
 }
 
 function Header({ userName = 'Ксения', onOpenHome, onOpenCreateQuiz }) {
-  return (
-    <header className="app-header app-container">
-      <button type="button" className="app-header-brand-button" onClick={onOpenHome}>
-        <div className="app-header-brand">
-          <img src={logoIcon} alt="" className="app-header-brand-icon" />
-          <span className="app-header-brand-name">Quizzy</span>
-        </div>
-      </button>
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
-      <div className="app-header-actions">
-        <button type="button" className="app-header-action app-header-action-light">
-          Подключиться по коду
+  return (
+    <>
+      <header className="app-header app-container">
+        <button type="button" className="app-header-brand-button" onClick={onOpenHome}>
+          <div className="app-header-brand">
+            <img src={logoIcon} alt="" className="app-header-brand-icon" />
+            <span className="app-header-brand-name">Quizzy</span>
+          </div>
         </button>
-        <button
-          type="button"
-          className="app-header-action app-header-action-primary"
-          onClick={onOpenCreateQuiz}
-        >
-          <span className="app-header-action-icon">
-            <PlusIcon />
-          </span>
-          <span>Создать квиз</span>
-        </button>
-        <div className="app-header-avatar" aria-label={`Профиль пользователя ${userName}`}>
-          {userName.charAt(0)}
+
+        <div className="app-header-actions">
+          <button
+            type="button"
+            className="app-header-action app-header-action-light"
+            onClick={() => setIsJoinModalOpen(true)}
+          >
+            Подключиться по коду
+          </button>
+          <button
+            type="button"
+            className="app-header-action app-header-action-primary"
+            onClick={onOpenCreateQuiz}
+          >
+            <span className="app-header-action-icon">
+              <PlusIcon />
+            </span>
+            <span>Создать квиз</span>
+          </button>
+          <div className="app-header-avatar" aria-label={`Профиль пользователя ${userName}`}>
+            {userName.charAt(0)}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <JoinByCodeModal isOpen={isJoinModalOpen} onClose={() => setIsJoinModalOpen(false)} />
+    </>
   );
 }
 
