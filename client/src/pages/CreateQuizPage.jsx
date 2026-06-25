@@ -1,16 +1,5 @@
-import logoIcon from '../assets/quizzy-logo.png';
+import Header from '../components/Header';
 import '../styles/createQuiz.css';
-
-const userName = 'Ксения';
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
 
 function ArrowLeftIcon() {
   return (
@@ -54,31 +43,12 @@ function CreateQuizPage({
   quizDraft,
   onChangeQuizDraft,
   onOpenHome,
+  onOpenCreateQuiz,
   onOpenAddQuestions,
 }) {
   return (
     <div className="create-quiz-page">
-      <header className="create-quiz-header create-quiz-container">
-        <div className="create-quiz-brand">
-          <img src={logoIcon} alt="" className="create-quiz-brand-icon" />
-          <span className="create-quiz-brand-name">Quizzy</span>
-        </div>
-
-        <div className="create-quiz-header-actions">
-          <button type="button" className="create-quiz-action create-quiz-action-light">
-            Подключиться по коду
-          </button>
-          <button type="button" className="create-quiz-action create-quiz-action-primary">
-            <span className="create-quiz-action-icon">
-              <PlusIcon />
-            </span>
-            <span>Создать квиз</span>
-          </button>
-          <div className="create-quiz-avatar" aria-label={`Профиль пользователя ${userName}`}>
-            {userName.charAt(0)}
-          </div>
-        </div>
-      </header>
+      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
 
       <main className="create-quiz-main">
         <div className="create-quiz-container create-quiz-content">

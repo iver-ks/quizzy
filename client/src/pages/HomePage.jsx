@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import logoIcon from '../assets/quizzy-logo.png';
 import emptyStateImage from '../assets/images/no_quizs.png';
+import Header from '../components/Header';
 import '../styles/home.css';
 
 const categories = ['Все', 'История', 'Математика', 'IT', 'Биология', 'Языки', 'Другое'];
-const userName = 'Ксения';
 
 const publicQuizzes = [
   {
@@ -80,16 +80,7 @@ function BookIcon() {
   );
 }
 
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function HomePage({ onOpenCreateQuiz }) {
+function HomePage({ onOpenHome, onOpenCreateQuiz }) {
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Все');
 
@@ -109,30 +100,10 @@ function HomePage({ onOpenCreateQuiz }) {
 
   return (
     <div className="home-page">
-      <header className="home-header home-container">
-        <div className="home-brand">
-          <img src={logoIcon} alt="" className="home-brand-icon" />
-          <span className="home-brand-name">Quizzy</span>
-        </div>
-
-        <div className="home-header-actions">
-          <button type="button" className="home-action home-action-light">
-            Подключиться по коду
-          </button>
-          <button type="button" className="home-action home-action-primary" onClick={onOpenCreateQuiz}>
-            <span className="home-action-icon">
-              <PlusIcon />
-            </span>
-            <span>Создать квиз</span>
-          </button>
-          <div className="home-avatar" aria-label={`Профиль пользователя ${userName}`}>
-            {userName.charAt(0)}
-          </div>
-        </div>
-      </header>
+      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
 
       <main className="home-main">
-        <div className="home-container">
+        <div className="app-container">
           <section className="home-intro">
             <h1>Публичные квизы</h1>
             <p>Выберите открытый квиз и подключайтесь к игре в реальном времени</p>
@@ -151,10 +122,7 @@ function HomePage({ onOpenCreateQuiz }) {
               />
             </label>
 
-            <label
-              className="home-select-wrap"
-              aria-label="Фильтр по категории"
-            >
+            <label className="home-select-wrap" aria-label="Фильтр по категории">
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
@@ -216,7 +184,7 @@ function HomePage({ onOpenCreateQuiz }) {
       </main>
 
       <footer className="home-footer">
-        <div className="home-container home-footer-inner">
+        <div className="app-container home-footer-inner">
           <div className="home-brand home-footer-brand">
             <img src={logoIcon} alt="" className="home-brand-icon" />
             <span className="home-brand-name">Quizzy</span>

@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import CreateQuizPage from './pages/CreateQuizPage';
 import AddQuestionsPage from './pages/AddQuestionsPage';
+import WaitingRoomPage from './pages/WaitingRoomPage';
 
 function App() {
   const [page, setPage] = useState('landing');
@@ -41,6 +42,7 @@ function App() {
         quizDraft={quizDraft}
         onChangeQuizDraft={setQuizDraft}
         onOpenHome={() => setPage('home')}
+        onOpenCreateQuiz={() => setPage('create-quiz')}
         onOpenAddQuestions={() => setPage('add-questions')}
       />
     );
@@ -50,13 +52,32 @@ function App() {
     return (
       <AddQuestionsPage
         quizTitle={quizDraft.title}
+        accessType={quizDraft.accessType}
+        onOpenHome={() => setPage('home')}
+        onOpenCreateQuiz={() => setPage('create-quiz')}
+        onOpenWaitingRoom={() => setPage('waiting-room')}
+      />
+    );
+  }
+
+  if (page === 'waiting-room') {
+    return (
+      <WaitingRoomPage
+        quizTitle={quizDraft.title}
+        accessType={quizDraft.accessType}
+        onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
       />
     );
   }
 
   if (page === 'home') {
-    return <HomePage onOpenCreateQuiz={() => setPage('create-quiz')} />;
+    return (
+      <HomePage
+        onOpenHome={() => setPage('home')}
+        onOpenCreateQuiz={() => setPage('create-quiz')}
+      />
+    );
   }
 
   return (

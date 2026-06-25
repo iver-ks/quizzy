@@ -28,6 +28,11 @@
   margin: 0 auto;
 }
 
+.add-questions-header-container {
+  width: min(1180px, calc(100% - clamp(24px, 4vw, 64px)));
+  margin: 0 auto;
+}
+
 .add-questions-header {
   display: flex;
   align-items: center;
@@ -40,6 +45,15 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
+}
+
+.add-questions-brand-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 .add-questions-brand-icon {
@@ -64,7 +78,23 @@
   flex-wrap: wrap;
 }
 
-.add-questions-action,
+.add-questions-action {
+  min-height: 44px;
+  padding: 11px 20px;
+  border-radius: 14px;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.22s ease, color 0.22s ease, box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
 .add-questions-save-btn,
 .add-questions-launch-btn {
   min-height: 44px;
@@ -105,7 +135,14 @@
   box-shadow: 0 0 24px rgba(106, 82, 227, 0.24);
 }
 
-.add-questions-action-icon,
+.add-questions-action-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .add-questions-launch-icon,
 .questions-sidebar-add-icon,
 .question-add-option-icon,
@@ -193,6 +230,7 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  line-height: 1;
 }
 
 .add-questions-heading h1 {
@@ -205,6 +243,9 @@
 
 .add-questions-heading span {
   font-size: clamp(1rem, 1.6vw, 1.15rem);
+  display: inline-flex;
+  align-items: center;
+  transform: translateY(2px);
   color: #b2b4c0;
 }
 
@@ -639,6 +680,14 @@
 }
 
 @media (max-width: 760px) {
+  .add-questions-header {
+    gap: 14px;
+  }
+
+  .add-questions-header-actions {
+    width: 100%;
+  }
+
   .add-questions-topbar,
   .question-editor-header,
   .add-questions-title-wrap {

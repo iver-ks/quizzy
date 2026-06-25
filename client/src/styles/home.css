@@ -43,6 +43,15 @@
   gap: 12px;
 }
 
+.home-brand-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 .home-brand-icon {
   width: 40px;
   height: 40px;

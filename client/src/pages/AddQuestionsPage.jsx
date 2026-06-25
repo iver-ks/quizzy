@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import logoIcon from '../assets/quizzy-logo.png';
+import Header from '../components/Header';
 import '../styles/addQuestions.css';
 
-const userName = 'Ксения';
 const MAX_OPTIONS = 10;
 
 function createDefaultQuestion(index) {
@@ -72,7 +71,13 @@ function TrashIcon() {
   );
 }
 
-function AddQuestionsPage({ quizTitle, onOpenCreateQuiz }) {
+function AddQuestionsPage({
+  quizTitle,
+  accessType,
+  onOpenHome,
+  onOpenCreateQuiz,
+  onOpenWaitingRoom,
+}) {
   const [questions, setQuestions] = useState(initialQuestions);
   const [activeQuestionId, setActiveQuestionId] = useState(initialQuestions[0].id);
   const [nextQuestionId, setNextQuestionId] = useState(initialQuestions.length + 1);
@@ -207,27 +212,7 @@ function AddQuestionsPage({ quizTitle, onOpenCreateQuiz }) {
 
   return (
     <div className="add-questions-page">
-      <header className="add-questions-header add-questions-container">
-        <div className="add-questions-brand">
-          <img src={logoIcon} alt="" className="add-questions-brand-icon" />
-          <span className="add-questions-brand-name">Quizzy</span>
-        </div>
-
-        <div className="add-questions-header-actions">
-          <button type="button" className="add-questions-action add-questions-action-light">
-            Подключиться по коду
-          </button>
-          <button type="button" className="add-questions-action add-questions-action-primary">
-            <span className="add-questions-action-icon">
-              <PlusIcon />
-            </span>
-            <span>Создать квиз</span>
-          </button>
-          <div className="add-questions-avatar" aria-label={`Профиль пользователя ${userName}`}>
-            {userName.charAt(0)}
-          </div>
-        </div>
-      </header>
+      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
 
       <main className="add-questions-main">
         <div className="add-questions-container">
@@ -246,7 +231,11 @@ function AddQuestionsPage({ quizTitle, onOpenCreateQuiz }) {
               <button type="button" className="add-questions-save-btn">
                 Сохранить квиз
               </button>
-              <button type="button" className="add-questions-launch-btn">
+              <button
+                type="button"
+                className="add-questions-launch-btn"
+                onClick={onOpenWaitingRoom}
+              >
                 <span className="add-questions-launch-icon">
                   <PlayIcon />
                 </span>
