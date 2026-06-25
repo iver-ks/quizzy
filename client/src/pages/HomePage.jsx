@@ -87,6 +87,8 @@ function BookIcon() {
 }
 
 function HomePage({
+  currentUser,
+  onLogout,
   onOpenHome,
   onOpenCreateQuiz,
   onJoinByCodeSuccess,
@@ -112,6 +114,8 @@ function HomePage({
   return (
     <div className="home-page">
       <Header
+        userName={currentUser?.name || 'Quizzy'}
+        onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}

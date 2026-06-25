@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { loginUser } from '../api/authApi';
 import logoIcon from '../assets/quizzy-logo.png';
 import '../styles/login.css';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NETWORK_ERROR_MESSAGE = 'Сервер временно недоступен. Попробуйте позже.';
 
 function MailIcon() {
   return (
@@ -41,10 +45,63 @@ function EyeIcon({ open }) {
   );
 }
 
-function LoginPage({ onOpenLanding, onOpenRegister, onOpenHome }) {
+function LoginPage({ onOpenLanding, onOpenRegister, onAuthSuccess }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const nextErrors = {};
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      nextErrors.email = 'Введите email';
+    } else if (!EMAIL_REGEX.test(normalizedEmail)) {
+      nextErrors.email = 'Введите корректный email';
+    }
+
+    if (!password) {
+      nextErrors.password = 'Введите пароль';
+    }
+
+    return nextErrors;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const nextErrors = validateForm();
+    setErrors(nextErrors);
+    setSubmitError('');
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const authData = await loginUser({
+        email: email.trim(),
+        password,
+      });
+
+      onAuthSuccess?.(authData);
+    } catch (error) {
+      if (error.message === NETWORK_ERROR_MESSAGE) {
+        setSubmitError(NETWORK_ERROR_MESSAGE);
+      } else if (error.field === 'email' || error.field === 'password') {
+        setErrors((current) => ({ ...current, [error.field]: error.message }));
+      } else {
+        setSubmitError(error.message || 'Неверный email или пароль');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="login-page">
@@ -58,48 +115,51 @@ function LoginPage({ onOpenLanding, onOpenRegister, onOpenHome }) {
           <header className="login-card-header">
             <h1>Добро пожаловать</h1>
             <p>
-              Войдите в аккаунт Quizzy, чтобы продолжить участие в играх и создание
-              квизов.
+              Войдите в аккаунт Quizzy, чтобы продолжить участие в играх и создание квизов.
             </p>
           </header>
 
-          <form
-            className="login-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (onOpenHome) {
-                onOpenHome();
-              }
-            }}
-          >
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
             <div className="login-field-group">
               <label htmlFor="login-email">Email</label>
-              <div className="login-input-shell">
+              <div className={`login-input-shell${errors.email ? ' is-invalid' : ''}`}>
                 <span className="login-input-icon">
                   <MailIcon />
                 </span>
                 <input
                   id="login-email"
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    setErrors((current) => ({ ...current, email: '' }));
+                    setSubmitError('');
+                  }}
                 />
               </div>
+              {errors.email ? <p className="login-field-error">{errors.email}</p> : null}
             </div>
 
             <div className="login-field-group">
               <label htmlFor="login-password">Пароль</label>
-              <div className="login-input-shell">
+              <div className={`login-input-shell${errors.password ? ' is-invalid' : ''}`}>
                 <span className="login-input-icon">
                   <LockIcon />
                 </span>
                 <input
                   id="login-password"
                   type={passwordVisible ? 'text' : 'password'}
+                  autoComplete="current-password"
                   placeholder="••••••••••"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setErrors((current) => ({ ...current, password: '' }));
+                    setSubmitError('');
+                  }}
                 />
                 <button
                   type="button"
@@ -110,10 +170,13 @@ function LoginPage({ onOpenLanding, onOpenRegister, onOpenHome }) {
                   <EyeIcon open={passwordVisible} />
                 </button>
               </div>
+              {errors.password ? <p className="login-field-error">{errors.password}</p> : null}
             </div>
 
-            <button type="submit" className="login-submit">
-              Войти
+            {submitError ? <p className="login-form-error">{submitError}</p> : null}
+
+            <button type="submit" className="login-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Вход...' : 'Войти'}
             </button>
           </form>
 

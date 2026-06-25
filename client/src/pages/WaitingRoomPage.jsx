@@ -50,6 +50,8 @@ function LockIcon() {
 }
 
 function WaitingRoomPage({
+  currentUser,
+  onLogout,
   quizTitle,
   accessType = 'public',
   onOpenHome,
@@ -57,10 +59,7 @@ function WaitingRoomPage({
   onOpenHostQuiz,
   onJoinByCodeSuccess,
 }) {
-  const roomCode = useMemo(
-    () => String(Math.floor(100000 + Math.random() * 900000)),
-    [],
-  );
+  const roomCode = useMemo(() => String(Math.floor(100000 + Math.random() * 900000)), []);
   const storageKey = `quizzy-room-code-copied-${roomCode}`;
   const [copied, setCopied] = useState(false);
 
@@ -86,6 +85,8 @@ function WaitingRoomPage({
   return (
     <div className="waiting-room-page">
       <Header
+        userName={currentUser?.name || 'Quizzy'}
+        onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { getCurrentUser } from './api/authApi';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -8,9 +10,36 @@ import AddQuestionsPage from './pages/AddQuestionsPage';
 import WaitingRoomPage from './pages/WaitingRoomPage';
 import HostQuizPage from './pages/HostQuizPage';
 import ParticipantWaitingPage from './pages/ParticipantWaitingPage';
+import ParticipantQuizPage from './pages/ParticipantQuizPage';
+
+function readStoredUser() {
+  const rawUser = localStorage.getItem('quizzy_user');
+
+  if (!rawUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawUser);
+  } catch (error) {
+    localStorage.removeItem('quizzy_user');
+    return null;
+  }
+}
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('quizzy_token');
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function App() {
-  const [page, setPage] = useState('landing');
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(() => readStoredUser());
   const [quizDraft, setQuizDraft] = useState({
     title: 'История России XIX века',
     description: '',
@@ -24,115 +53,170 @@ function App() {
     participantsCount: 7,
   });
 
+  useEffect(() => {
+    const token = localStorage.getItem('quizzy_token');
+
+    if (!token) {
+      setCurrentUser(null);
+      return;
+    }
+
+    getCurrentUser(token)
+      .then((user) => {
+        setCurrentUser(user);
+        localStorage.setItem('quizzy_user', JSON.stringify(user));
+      })
+      .catch(() => {
+        localStorage.removeItem('quizzy_token');
+        localStorage.removeItem('quizzy_user');
+        setCurrentUser(null);
+      });
+  }, []);
+
+  const handleAuthSuccess = (authData) => {
+    const user = {
+      user_id: authData.user_id,
+      name: authData.name,
+      email: authData.email,
+    };
+
+    localStorage.setItem('quizzy_token', authData.token);
+    localStorage.setItem('quizzy_user', JSON.stringify(user));
+    setCurrentUser(user);
+    navigate('/home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('quizzy_token');
+    localStorage.removeItem('quizzy_user');
+    setCurrentUser(null);
+    navigate('/');
+  };
+
   const handleJoinByCodeSuccess = ({ roomCode }) => {
     setParticipantRoom((current) => ({
       ...current,
       roomCode,
     }));
-    setPage('participant-waiting');
+    navigate('/participant-waiting');
   };
 
   const handleOpenParticipantWaiting = (roomData) => {
     setParticipantRoom(roomData);
-    setPage('participant-waiting');
+    navigate('/participant-waiting');
   };
 
-  if (page === 'login') {
-    return (
-      <LoginPage
-        onOpenLanding={() => setPage('landing')}
-        onOpenRegister={() => setPage('register')}
-        onOpenHome={() => setPage('home')}
-      />
-    );
-  }
-
-  if (page === 'register') {
-    return (
-      <RegisterPage
-        onOpenLanding={() => setPage('landing')}
-        onOpenLogin={() => setPage('login')}
-        onOpenHome={() => setPage('home')}
-      />
-    );
-  }
-
-  if (page === 'create-quiz') {
-    return (
-      <CreateQuizPage
-        quizDraft={quizDraft}
-        onChangeQuizDraft={setQuizDraft}
-        onOpenHome={() => setPage('home')}
-        onOpenCreateQuiz={() => setPage('create-quiz')}
-        onOpenAddQuestions={() => setPage('add-questions')}
-        onJoinByCodeSuccess={handleJoinByCodeSuccess}
-      />
-    );
-  }
-
-  if (page === 'add-questions') {
-    return (
-      <AddQuestionsPage
-        quizTitle={quizDraft.title}
-        accessType={quizDraft.accessType}
-        onOpenHome={() => setPage('home')}
-        onOpenCreateQuiz={() => setPage('create-quiz')}
-        onOpenWaitingRoom={() => setPage('waiting-room')}
-        onJoinByCodeSuccess={handleJoinByCodeSuccess}
-      />
-    );
-  }
-
-  if (page === 'waiting-room') {
-    return (
-      <WaitingRoomPage
-        quizTitle={quizDraft.title}
-        accessType={quizDraft.accessType}
-        onOpenHome={() => setPage('home')}
-        onOpenCreateQuiz={() => setPage('create-quiz')}
-        onOpenHostQuiz={() => setPage('host-quiz')}
-        onJoinByCodeSuccess={handleJoinByCodeSuccess}
-      />
-    );
-  }
-
-  if (page === 'host-quiz') {
-    return (
-      <HostQuizPage
-        onOpenHome={() => setPage('home')}
-        onOpenCreateQuiz={() => setPage('create-quiz')}
-        onJoinByCodeSuccess={handleJoinByCodeSuccess}
-      />
-    );
-  }
-
-  if (page === 'participant-waiting') {
-    return (
-      <ParticipantWaitingPage
-        quizTitle={participantRoom.quizTitle}
-        organizerName={participantRoom.organizerName}
-        roomCode={participantRoom.roomCode}
-        participantsCount={participantRoom.participantsCount}
-      />
-    );
-  }
-
-  if (page === 'home') {
-    return (
-      <HomePage
-        onOpenHome={() => setPage('home')}
-        onOpenCreateQuiz={() => setPage('create-quiz')}
-        onJoinByCodeSuccess={handleJoinByCodeSuccess}
-        onOpenParticipantWaiting={handleOpenParticipantWaiting}
-      />
-    );
-  }
+  const protectedPageProps = {
+    currentUser,
+    onLogout: handleLogout,
+    onOpenHome: () => navigate('/home'),
+    onOpenCreateQuiz: () => navigate('/create-quiz'),
+    onJoinByCodeSuccess: handleJoinByCodeSuccess,
+  };
 
   return (
-    <LandingPage
-      onOpenLogin={() => setPage('login')}
-      onOpenRegister={() => setPage('register')}
-    />
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <LandingPage
+            onOpenLogin={() => navigate('/login')}
+            onOpenRegister={() => navigate('/register')}
+          />
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <LoginPage
+            onOpenLanding={() => navigate('/')}
+            onOpenRegister={() => navigate('/register')}
+            onAuthSuccess={handleAuthSuccess}
+          />
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <RegisterPage
+            onOpenLanding={() => navigate('/')}
+            onOpenLogin={() => navigate('/login')}
+            onAuthSuccess={handleAuthSuccess}
+          />
+        }
+      />
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <HomePage
+              {...protectedPageProps}
+              onOpenParticipantWaiting={handleOpenParticipantWaiting}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-quiz"
+        element={
+          <ProtectedRoute>
+            <CreateQuizPage
+              {...protectedPageProps}
+              quizDraft={quizDraft}
+              onChangeQuizDraft={setQuizDraft}
+              onOpenAddQuestions={() => navigate('/add-questions')}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/add-questions"
+        element={
+          <ProtectedRoute>
+            <AddQuestionsPage
+              {...protectedPageProps}
+              quizTitle={quizDraft.title}
+              accessType={quizDraft.accessType}
+              onOpenWaitingRoom={() => navigate('/waiting-room')}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/waiting-room"
+        element={
+          <ProtectedRoute>
+            <WaitingRoomPage
+              {...protectedPageProps}
+              quizTitle={quizDraft.title}
+              accessType={quizDraft.accessType}
+              onOpenHostQuiz={() => navigate('/host-quiz')}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/host-quiz"
+        element={
+          <ProtectedRoute>
+            <HostQuizPage {...protectedPageProps} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/participant-waiting"
+        element={
+          <ParticipantWaitingPage
+            quizTitle={participantRoom.quizTitle}
+            organizerName={participantRoom.organizerName}
+            roomCode={participantRoom.roomCode}
+            participantsCount={participantRoom.participantsCount}
+          />
+        }
+      />
+      <Route path="/participant-quiz" element={<ParticipantQuizPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

@@ -2,3 +2,9 @@ client/node_modules/
 client/dist/
 client/*.log
 client/.vite/
+server/node_modules/
+server/*.log
+server/.env
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -60,10 +60,18 @@ function TrophyIcon() {
   );
 }
 
-function HostQuizPage({ onOpenHome, onOpenCreateQuiz, onJoinByCodeSuccess }) {
+function HostQuizPage({
+  currentUser,
+  onLogout,
+  onOpenHome,
+  onOpenCreateQuiz,
+  onJoinByCodeSuccess,
+}) {
   return (
     <div className="host-quiz-page">
       <Header
+        userName={currentUser?.name || 'Quizzy'}
+        onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}

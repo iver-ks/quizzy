@@ -72,6 +72,8 @@ function TrashIcon() {
 }
 
 function AddQuestionsPage({
+  currentUser,
+  onLogout,
   quizTitle,
   accessType,
   onOpenHome,
@@ -85,14 +87,14 @@ function AddQuestionsPage({
 
   const activeQuestion = useMemo(
     () => questions.find((question) => question.id === activeQuestionId) ?? questions[0],
-    [questions, activeQuestionId],
+    [questions, activeQuestionId]
   );
 
   function updateActiveQuestion(updater) {
     setQuestions((currentQuestions) =>
       currentQuestions.map((question) =>
-        question.id === activeQuestionId ? updater(question) : question,
-      ),
+        question.id === activeQuestionId ? updater(question) : question
+      )
     );
   }
 
@@ -111,7 +113,7 @@ function AddQuestionsPage({
     updateActiveQuestion((question) => ({
       ...question,
       options: question.options.map((option) =>
-        option.id === optionId ? { ...option, text } : option,
+        option.id === optionId ? { ...option, text } : option
       ),
     }));
   }
@@ -214,6 +216,8 @@ function AddQuestionsPage({
   return (
     <div className="add-questions-page">
       <Header
+        userName={currentUser?.name || 'Quizzy'}
+        onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
@@ -251,7 +255,7 @@ function AddQuestionsPage({
 
           <section className="add-questions-layout">
             <aside className="questions-sidebar-card">
-              <h2>Вопросы({questions.length})</h2>
+              <h2>Вопросы ({questions.length})</h2>
 
               <div className="questions-sidebar-list">
                 {questions.map((question, index) => {
@@ -324,7 +328,7 @@ function AddQuestionsPage({
                 <label htmlFor="question-text">Текст вопроса</label>
                 <textarea
                   id="question-text"
-                  placeholder="Введите текст вопроса.."
+                  placeholder="Введите текст вопроса..."
                   value={activeQuestion.text}
                   onChange={(event) =>
                     updateActiveQuestion((question) => ({

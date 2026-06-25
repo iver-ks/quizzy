@@ -40,6 +40,8 @@ function LockIcon() {
 }
 
 function CreateQuizPage({
+  currentUser,
+  onLogout,
   quizDraft,
   onChangeQuizDraft,
   onOpenHome,
@@ -50,6 +52,8 @@ function CreateQuizPage({
   return (
     <div className="create-quiz-page">
       <Header
+        userName={currentUser?.name || 'Quizzy'}
+        onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
@@ -86,7 +90,7 @@ function CreateQuizPage({
                 <label htmlFor="quiz-description">Описание</label>
                 <textarea
                   id="quiz-description"
-                  placeholder="Краткие описание квиза..."
+                  placeholder="Краткое описание квиза..."
                   value={quizDraft.description}
                   onChange={(event) =>
                     onChangeQuizDraft((current) => ({

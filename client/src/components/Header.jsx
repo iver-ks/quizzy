@@ -14,6 +14,7 @@ function PlusIcon() {
 
 function Header({
   userName = 'Ксения',
+  onLogout,
   onOpenHome,
   onOpenCreateQuiz,
   onJoinByCodeSuccess,

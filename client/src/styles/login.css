@@ -118,6 +118,10 @@
   border-color: var(--login-purple);
 }
 
+.login-input-shell.is-invalid {
+  border-color: #d44949;
+}
+
 .login-input-icon {
   display: inline-flex;
   align-items: center;
@@ -196,6 +200,20 @@
 .login-submit:hover {
   transform: none;
   box-shadow: 0 0 24px rgba(104, 79, 220, 0.24);
+}
+
+.login-submit:disabled {
+  opacity: 0.72;
+  cursor: wait;
+  box-shadow: none;
+}
+
+.login-form-error,
+.login-field-error {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #d44949;
 }
 
 .login-signup-hint {
