@@ -13,6 +13,7 @@ const publicQuizzes = [
     questions: 15,
     host: 'Алексей К.',
     players: '2/10',
+    roomCode: '482913',
   },
   {
     title: 'Математика: Алгебра 9 класс',
@@ -20,6 +21,7 @@ const publicQuizzes = [
     questions: 20,
     host: 'Мария С.',
     players: '7/10',
+    roomCode: '518204',
   },
   {
     title: 'Общие знания: Мировая культура',
@@ -27,6 +29,7 @@ const publicQuizzes = [
     questions: 12,
     host: 'Дмитрий П.',
     players: '5/12',
+    roomCode: '631577',
   },
   {
     title: 'Программирование на Python',
@@ -34,6 +37,7 @@ const publicQuizzes = [
     questions: 18,
     host: 'Анна В.',
     players: '9/15',
+    roomCode: '246801',
   },
   {
     title: 'Биология: Клетка и её строение',
@@ -41,6 +45,7 @@ const publicQuizzes = [
     questions: 10,
     host: 'Сергей Н.',
     players: '3/10',
+    roomCode: '774320',
   },
   {
     title: 'Английский язык: Intermediate',
@@ -48,6 +53,7 @@ const publicQuizzes = [
     questions: 25,
     host: 'Ольга Т.',
     players: '6/15',
+    roomCode: '905114',
   },
 ];
 
@@ -80,7 +86,12 @@ function BookIcon() {
   );
 }
 
-function HomePage({ onOpenHome, onOpenCreateQuiz }) {
+function HomePage({
+  onOpenHome,
+  onOpenCreateQuiz,
+  onJoinByCodeSuccess,
+  onOpenParticipantWaiting,
+}) {
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Все');
 
@@ -100,7 +111,11 @@ function HomePage({ onOpenHome, onOpenCreateQuiz }) {
 
   return (
     <div className="home-page">
-      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
+      <Header
+        onOpenHome={onOpenHome}
+        onOpenCreateQuiz={onOpenCreateQuiz}
+        onJoinByCodeSuccess={onJoinByCodeSuccess}
+      />
 
       <main className="home-main">
         <div className="app-container">
@@ -168,7 +183,18 @@ function HomePage({ onOpenHome, onOpenCreateQuiz }) {
                     <p>Организатор: {quiz.host}</p>
                   </div>
 
-                  <button type="button" className="quiz-public-join">
+                  <button
+                    type="button"
+                    className="quiz-public-join"
+                    onClick={() =>
+                      onOpenParticipantWaiting?.({
+                        quizTitle: quiz.title,
+                        organizerName: quiz.host,
+                        roomCode: quiz.roomCode,
+                        participantsCount: Number.parseInt(quiz.players.split('/')[0], 10) || 0,
+                      })
+                    }
+                  >
                     Подключиться
                   </button>
                 </article>

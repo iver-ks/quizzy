@@ -1,0 +1,237 @@
+:root {
+  --participant-bg: #fbfaff;
+  --participant-surface: #ffffff;
+  --participant-text: #262733;
+  --participant-muted: #565c74;
+  --participant-border: #c3c1cc;
+  --participant-purple: #684fdc;
+  --participant-soft-purple: #f1edff;
+  --participant-status-bg: #f3f0ff;
+  --participant-shadow: 0 16px 36px rgba(52, 46, 94, 0.14);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.participant-waiting-page {
+  min-height: 100vh;
+  background: var(--participant-bg);
+  overflow-x: hidden;
+}
+
+.participant-waiting-main {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+}
+
+.participant-waiting-card {
+  width: min(100%, 480px);
+  background: var(--participant-surface);
+  border: 1px solid rgba(112, 106, 146, 0.24);
+  border-radius: 20px;
+  box-shadow: var(--participant-shadow);
+  padding: 28px 28px 30px;
+}
+
+.participant-waiting-icon-shell {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto;
+  border-radius: 18px;
+  background: #f6f3ff;
+  color: var(--participant-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant-waiting-icon-shell svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.participant-waiting-heading {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.participant-waiting-heading h1 {
+  margin: 0;
+  font-size: clamp(1.78rem, 2.6vw, 2.08rem);
+  line-height: 1.14;
+  letter-spacing: -0.04em;
+  color: var(--participant-text);
+}
+
+.participant-waiting-heading p {
+  margin: 9px 0 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: #484d63;
+}
+
+.participant-waiting-status {
+  margin-top: 26px;
+  padding: 24px 20px;
+  border-radius: 16px;
+  background: var(--participant-status-bg);
+  text-align: center;
+}
+
+.participant-waiting-status-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2f3040;
+}
+
+.participant-waiting-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffb017;
+  flex-shrink: 0;
+}
+
+.participant-waiting-status p {
+  margin: 8px 0 0;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: #4c5066;
+}
+
+.participant-waiting-status strong {
+  color: var(--participant-purple);
+  font-weight: 600;
+}
+
+.participant-waiting-count {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #666d81;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.participant-waiting-count-icon {
+  width: 20px;
+  height: 20px;
+  color: #7a8094;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.participant-waiting-count-icon svg,
+.participant-waiting-rule-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.participant-waiting-rules {
+  margin-top: 28px;
+  padding: 20px 20px 18px;
+  border: 2px solid var(--participant-border);
+  border-radius: 16px;
+  background: #fcfbff;
+}
+
+.participant-waiting-rules h2 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: var(--participant-text);
+}
+
+.participant-waiting-rules ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+
+.participant-waiting-rules li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: #444a61;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.participant-waiting-rule-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--participant-purple);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+@media (max-width: 640px) {
+  .participant-waiting-main {
+    padding: 20px 14px;
+  }
+
+  .participant-waiting-card {
+    padding: 22px 18px 22px;
+    border-radius: 18px;
+  }
+
+  .participant-waiting-icon-shell {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+  }
+
+  .participant-waiting-icon-shell svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .participant-waiting-heading h1 {
+    font-size: clamp(1.75rem, 8vw, 2rem);
+  }
+
+  .participant-waiting-heading p,
+  .participant-waiting-status-row,
+  .participant-waiting-count {
+    font-size: 0.95rem;
+  }
+
+  .participant-waiting-status,
+  .participant-waiting-rules {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .participant-waiting-rules li {
+    font-size: 0.94rem;
+  }
+}

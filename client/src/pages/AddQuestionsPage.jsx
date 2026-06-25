@@ -77,6 +77,7 @@ function AddQuestionsPage({
   onOpenHome,
   onOpenCreateQuiz,
   onOpenWaitingRoom,
+  onJoinByCodeSuccess,
 }) {
   const [questions, setQuestions] = useState(initialQuestions);
   const [activeQuestionId, setActiveQuestionId] = useState(initialQuestions[0].id);
@@ -212,7 +213,11 @@ function AddQuestionsPage({
 
   return (
     <div className="add-questions-page">
-      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
+      <Header
+        onOpenHome={onOpenHome}
+        onOpenCreateQuiz={onOpenCreateQuiz}
+        onJoinByCodeSuccess={onJoinByCodeSuccess}
+      />
 
       <main className="add-questions-main">
         <div className="add-questions-container">

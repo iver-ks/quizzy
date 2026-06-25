@@ -7,6 +7,7 @@ import CreateQuizPage from './pages/CreateQuizPage';
 import AddQuestionsPage from './pages/AddQuestionsPage';
 import WaitingRoomPage from './pages/WaitingRoomPage';
 import HostQuizPage from './pages/HostQuizPage';
+import ParticipantWaitingPage from './pages/ParticipantWaitingPage';
 
 function App() {
   const [page, setPage] = useState('landing');
@@ -16,6 +17,25 @@ function App() {
     category: 'История',
     accessType: 'public',
   });
+  const [participantRoom, setParticipantRoom] = useState({
+    quizTitle: 'История России XIX века',
+    organizerName: 'Алексей К.',
+    roomCode: '482913',
+    participantsCount: 7,
+  });
+
+  const handleJoinByCodeSuccess = ({ roomCode }) => {
+    setParticipantRoom((current) => ({
+      ...current,
+      roomCode,
+    }));
+    setPage('participant-waiting');
+  };
+
+  const handleOpenParticipantWaiting = (roomData) => {
+    setParticipantRoom(roomData);
+    setPage('participant-waiting');
+  };
 
   if (page === 'login') {
     return (
@@ -45,6 +65,7 @@ function App() {
         onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
         onOpenAddQuestions={() => setPage('add-questions')}
+        onJoinByCodeSuccess={handleJoinByCodeSuccess}
       />
     );
   }
@@ -57,6 +78,7 @@ function App() {
         onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
         onOpenWaitingRoom={() => setPage('waiting-room')}
+        onJoinByCodeSuccess={handleJoinByCodeSuccess}
       />
     );
   }
@@ -69,6 +91,7 @@ function App() {
         onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
         onOpenHostQuiz={() => setPage('host-quiz')}
+        onJoinByCodeSuccess={handleJoinByCodeSuccess}
       />
     );
   }
@@ -78,6 +101,18 @@ function App() {
       <HostQuizPage
         onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
+        onJoinByCodeSuccess={handleJoinByCodeSuccess}
+      />
+    );
+  }
+
+  if (page === 'participant-waiting') {
+    return (
+      <ParticipantWaitingPage
+        quizTitle={participantRoom.quizTitle}
+        organizerName={participantRoom.organizerName}
+        roomCode={participantRoom.roomCode}
+        participantsCount={participantRoom.participantsCount}
       />
     );
   }
@@ -87,6 +122,8 @@ function App() {
       <HomePage
         onOpenHome={() => setPage('home')}
         onOpenCreateQuiz={() => setPage('create-quiz')}
+        onJoinByCodeSuccess={handleJoinByCodeSuccess}
+        onOpenParticipantWaiting={handleOpenParticipantWaiting}
       />
     );
   }

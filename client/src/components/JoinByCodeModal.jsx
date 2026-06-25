@@ -3,7 +3,7 @@ import '../styles/joinByCodeModal.css';
 
 const TEST_ROOM_CODE = '482913';
 
-function JoinByCodeModal({ isOpen, onClose }) {
+function JoinByCodeModal({ isOpen, onClose, onJoinSuccess }) {
   const [code, setCode] = useState('');
   const [showError, setShowError] = useState(false);
 
@@ -45,6 +45,7 @@ function JoinByCodeModal({ isOpen, onClose }) {
     }
 
     setShowError(false);
+    onJoinSuccess?.({ roomCode: code.trim() });
   };
 
   return (

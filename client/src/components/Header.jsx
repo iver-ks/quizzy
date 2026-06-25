@@ -12,7 +12,12 @@ function PlusIcon() {
   );
 }
 
-function Header({ userName = 'Ксения', onOpenHome, onOpenCreateQuiz }) {
+function Header({
+  userName = 'Ксения',
+  onOpenHome,
+  onOpenCreateQuiz,
+  onJoinByCodeSuccess,
+}) {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
   return (
@@ -49,7 +54,14 @@ function Header({ userName = 'Ксения', onOpenHome, onOpenCreateQuiz }) {
         </div>
       </header>
 
-      <JoinByCodeModal isOpen={isJoinModalOpen} onClose={() => setIsJoinModalOpen(false)} />
+      <JoinByCodeModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onJoinSuccess={(payload) => {
+          setIsJoinModalOpen(false);
+          onJoinByCodeSuccess?.(payload);
+        }}
+      />
     </>
   );
 }

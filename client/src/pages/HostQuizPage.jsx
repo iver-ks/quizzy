@@ -60,10 +60,14 @@ function TrophyIcon() {
   );
 }
 
-function HostQuizPage({ onOpenHome, onOpenCreateQuiz }) {
+function HostQuizPage({ onOpenHome, onOpenCreateQuiz, onJoinByCodeSuccess }) {
   return (
     <div className="host-quiz-page">
-      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
+      <Header
+        onOpenHome={onOpenHome}
+        onOpenCreateQuiz={onOpenCreateQuiz}
+        onJoinByCodeSuccess={onJoinByCodeSuccess}
+      />
 
       <main className="host-quiz-main">
         <div className="app-container host-quiz-layout">

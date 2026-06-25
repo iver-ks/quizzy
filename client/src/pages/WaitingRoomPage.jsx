@@ -55,6 +55,7 @@ function WaitingRoomPage({
   onOpenHome,
   onOpenCreateQuiz,
   onOpenHostQuiz,
+  onJoinByCodeSuccess,
 }) {
   const roomCode = useMemo(
     () => String(Math.floor(100000 + Math.random() * 900000)),
@@ -84,7 +85,11 @@ function WaitingRoomPage({
 
   return (
     <div className="waiting-room-page">
-      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
+      <Header
+        onOpenHome={onOpenHome}
+        onOpenCreateQuiz={onOpenCreateQuiz}
+        onJoinByCodeSuccess={onJoinByCodeSuccess}
+      />
 
       <main className="waiting-room-main">
         <div className="waiting-room-container waiting-room-shell">

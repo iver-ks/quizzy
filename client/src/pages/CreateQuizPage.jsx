@@ -45,10 +45,15 @@ function CreateQuizPage({
   onOpenHome,
   onOpenCreateQuiz,
   onOpenAddQuestions,
+  onJoinByCodeSuccess,
 }) {
   return (
     <div className="create-quiz-page">
-      <Header onOpenHome={onOpenHome} onOpenCreateQuiz={onOpenCreateQuiz} />
+      <Header
+        onOpenHome={onOpenHome}
+        onOpenCreateQuiz={onOpenCreateQuiz}
+        onJoinByCodeSuccess={onJoinByCodeSuccess}
+      />
 
       <main className="create-quiz-main">
         <div className="create-quiz-container create-quiz-content">
