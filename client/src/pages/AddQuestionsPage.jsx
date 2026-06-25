@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { getQuizById } from '../api/quizApi';
 import Header from '../components/Header';
 import '../styles/addQuestions.css';
 
@@ -74,16 +76,48 @@ function TrashIcon() {
 function AddQuestionsPage({
   currentUser,
   onLogout,
-  quizTitle,
-  accessType,
+  createdQuiz,
   onOpenHome,
   onOpenCreateQuiz,
   onOpenWaitingRoom,
   onJoinByCodeSuccess,
 }) {
+  const { quizId } = useParams();
   const [questions, setQuestions] = useState(initialQuestions);
   const [activeQuestionId, setActiveQuestionId] = useState(initialQuestions[0].id);
   const [nextQuestionId, setNextQuestionId] = useState(initialQuestions.length + 1);
+  const [quizData, setQuizData] = useState(createdQuiz);
+
+  useEffect(() => {
+    if (createdQuiz && String(createdQuiz.quiz_id) === String(quizId)) {
+      setQuizData(createdQuiz);
+      return;
+    }
+
+    const token = localStorage.getItem('quizzy_token');
+
+    if (!token || !quizId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    getQuizById(quizId, token)
+      .then((data) => {
+        if (isMounted) {
+          setQuizData(data);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setQuizData(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [createdQuiz, quizId]);
 
   const activeQuestion = useMemo(
     () => questions.find((question) => question.id === activeQuestionId) ?? questions[0],
@@ -232,7 +266,7 @@ function AddQuestionsPage({
               </button>
               <div className="add-questions-heading">
                 <h1>Добавление вопросов</h1>
-                <span>- {quizTitle || 'Без названия'}</span>
+                <span>- {quizData?.title || 'Без названия'}</span>
               </div>
             </div>
 

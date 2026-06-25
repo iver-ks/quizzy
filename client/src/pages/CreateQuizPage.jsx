@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createQuiz, getCategories } from '../api/quizApi';
 import Header from '../components/Header';
 import '../styles/createQuiz.css';
 
@@ -39,6 +42,36 @@ function LockIcon() {
   );
 }
 
+function validateQuizDraft({ title, description, categoryId, accessType }) {
+  const errors = {};
+  const trimmedTitle = title.trim();
+  const trimmedDescription = description.trim();
+
+  if (!trimmedTitle) {
+    errors.title = 'Введите название квиза';
+  } else if (trimmedTitle.length < 3) {
+    errors.title = 'Название должно содержать минимум 3 символа';
+  } else if (trimmedTitle.length > 100) {
+    errors.title = 'Название не должно быть длиннее 100 символов';
+  }
+
+  if (trimmedDescription.length > 500) {
+    errors.description = 'Описание не должно быть длиннее 500 символов';
+  }
+
+  if (!categoryId) {
+    errors.categoryId = 'Выберите категорию';
+  }
+
+  if (!accessType) {
+    errors.accessType = 'Выберите тип доступа';
+  } else if (!['public', 'private'].includes(accessType)) {
+    errors.accessType = 'Некорректный тип доступа';
+  }
+
+  return errors;
+}
+
 function CreateQuizPage({
   currentUser,
   onLogout,
@@ -46,9 +79,141 @@ function CreateQuizPage({
   onChangeQuizDraft,
   onOpenHome,
   onOpenCreateQuiz,
-  onOpenAddQuestions,
+  onQuizCreated,
   onJoinByCodeSuccess,
 }) {
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCategories() {
+      setIsLoadingCategories(true);
+      setFormError('');
+
+      try {
+        const data = await getCategories();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCategories(data);
+
+        if (data.length === 0) {
+          setFormError('Категории пока не добавлены в базу данных.');
+          return;
+        }
+
+        onChangeQuizDraft((current) => {
+          if (current.categoryId) {
+            return current;
+          }
+
+          return {
+            ...current,
+            categoryId: String(data[0].category_id),
+          };
+        });
+      } catch (error) {
+        if (isMounted) {
+          setFormError(error.message || 'Не удалось загрузить категории');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingCategories(false);
+        }
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onChangeQuizDraft]);
+
+  function updateDraftField(field, value) {
+    onChangeQuizDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    setFieldErrors((current) => {
+      if (!current[field]) {
+        return current;
+      }
+
+      const nextErrors = { ...current };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+
+    if (formError) {
+      setFormError('');
+    }
+  }
+
+  async function handleSubmit() {
+    const errors = validateQuizDraft(quizDraft);
+
+    if (categories.length === 0) {
+      errors.categoryId = 'Выберите категорию';
+      setFormError('Категории пока не добавлены в базу данных.');
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    const token = localStorage.getItem('quizzy_token');
+
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFieldErrors({});
+    setFormError('');
+
+    try {
+      const createdQuiz = await createQuiz(
+        {
+          title: quizDraft.title.trim(),
+          description: quizDraft.description.trim(),
+          category_id: Number(quizDraft.categoryId),
+          access_type: quizDraft.accessType,
+        },
+        token
+      );
+
+      onQuizCreated?.(createdQuiz);
+      navigate(`/quizzes/${createdQuiz.quiz_id}/questions`);
+    } catch (error) {
+      const fieldMap = {
+        title: 'title',
+        description: 'description',
+        category_id: 'categoryId',
+        access_type: 'accessType',
+      };
+
+      if (error.field && fieldMap[error.field]) {
+        setFieldErrors({ [fieldMap[error.field]]: error.message });
+      } else {
+        setFormError(error.message || 'Не удалось создать квиз');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="create-quiz-page">
       <Header
@@ -69,7 +234,7 @@ function CreateQuizPage({
           </div>
 
           <section className="create-quiz-card">
-            <form className="create-quiz-form" onSubmit={(event) => event.preventDefault()}>
+            <form className="create-quiz-form" onSubmit={(event) => event.preventDefault()} noValidate>
               <div className="create-quiz-field">
                 <label htmlFor="quiz-title">Название квиза</label>
                 <input
@@ -77,13 +242,12 @@ function CreateQuizPage({
                   type="text"
                   placeholder="Например: История России XIX века"
                   value={quizDraft.title}
-                  onChange={(event) =>
-                    onChangeQuizDraft((current) => ({
-                      ...current,
-                      title: event.target.value,
-                    }))
-                  }
+                  onChange={(event) => updateDraftField('title', event.target.value)}
+                  className={fieldErrors.title ? 'is-invalid' : ''}
                 />
+                {fieldErrors.title ? (
+                  <p className="create-quiz-error-text">{fieldErrors.title}</p>
+                ) : null}
               </div>
 
               <div className="create-quiz-field">
@@ -92,13 +256,12 @@ function CreateQuizPage({
                   id="quiz-description"
                   placeholder="Краткое описание квиза..."
                   value={quizDraft.description}
-                  onChange={(event) =>
-                    onChangeQuizDraft((current) => ({
-                      ...current,
-                      description: event.target.value,
-                    }))
-                  }
+                  onChange={(event) => updateDraftField('description', event.target.value)}
+                  className={fieldErrors.description ? 'is-invalid' : ''}
                 />
+                {fieldErrors.description ? (
+                  <p className="create-quiz-error-text">{fieldErrors.description}</p>
+                ) : null}
               </div>
 
               <div className="create-quiz-field">
@@ -106,22 +269,26 @@ function CreateQuizPage({
                 <div className="create-quiz-select-wrap">
                   <select
                     id="quiz-category"
-                    value={quizDraft.category}
-                    onChange={(event) =>
-                      onChangeQuizDraft((current) => ({
-                        ...current,
-                        category: event.target.value,
-                      }))
-                    }
+                    value={quizDraft.categoryId}
+                    onChange={(event) => updateDraftField('categoryId', event.target.value)}
+                    className={fieldErrors.categoryId ? 'is-invalid' : ''}
+                    disabled={isLoadingCategories || categories.length === 0}
                   >
-                    <option value="История">История</option>
-                    <option value="Математика">Математика</option>
-                    <option value="Другое">Другое</option>
-                    <option value="IT">IT</option>
-                    <option value="Биология">Биология</option>
-                    <option value="Языки">Языки</option>
+                    {categories.length === 0 ? (
+                      <option value="">
+                        {isLoadingCategories ? 'Загрузка категорий...' : 'Нет доступных категорий'}
+                      </option>
+                    ) : null}
+                    {categories.map((category) => (
+                      <option key={category.category_id} value={String(category.category_id)}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                {fieldErrors.categoryId ? (
+                  <p className="create-quiz-error-text">{fieldErrors.categoryId}</p>
+                ) : null}
               </div>
 
               <div className="create-quiz-field">
@@ -131,13 +298,8 @@ function CreateQuizPage({
                     type="button"
                     className={`create-quiz-access-card${
                       quizDraft.accessType === 'public' ? ' is-active' : ''
-                    }`}
-                    onClick={() =>
-                      onChangeQuizDraft((current) => ({
-                        ...current,
-                        accessType: 'public',
-                      }))
-                    }
+                    }${fieldErrors.accessType ? ' is-invalid' : ''}`}
+                    onClick={() => updateDraftField('accessType', 'public')}
                   >
                     <span className="create-quiz-access-icon">
                       <GlobeIcon />
@@ -152,13 +314,8 @@ function CreateQuizPage({
                     type="button"
                     className={`create-quiz-access-card${
                       quizDraft.accessType === 'private' ? ' is-active' : ''
-                    }`}
-                    onClick={() =>
-                      onChangeQuizDraft((current) => ({
-                        ...current,
-                        accessType: 'private',
-                      }))
-                    }
+                    }${fieldErrors.accessType ? ' is-invalid' : ''}`}
+                    onClick={() => updateDraftField('accessType', 'private')}
                   >
                     <span className="create-quiz-access-icon">
                       <LockIcon />
@@ -169,18 +326,24 @@ function CreateQuizPage({
                     </span>
                   </button>
                 </div>
+                {fieldErrors.accessType ? (
+                  <p className="create-quiz-error-text">{fieldErrors.accessType}</p>
+                ) : null}
               </div>
 
+              {formError ? <p className="create-quiz-form-error">{formError}</p> : null}
+
               <div className="create-quiz-actions-row">
-                <button type="button" className="create-quiz-secondary-btn">
+                <button type="button" className="create-quiz-secondary-btn" disabled>
                   Сохранить черновик
                 </button>
                 <button
                   type="button"
                   className="create-quiz-primary-btn"
-                  onClick={onOpenAddQuestions}
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || isLoadingCategories}
                 >
-                  <span>Перейти к вопросам</span>
+                  <span>{isSubmitting ? 'Создание...' : 'Перейти к вопросам'}</span>
                   <span className="create-quiz-primary-icon">
                     <ArrowRightIcon />
                   </span>

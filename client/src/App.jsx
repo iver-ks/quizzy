@@ -41,11 +41,12 @@ function App() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(() => readStoredUser());
   const [quizDraft, setQuizDraft] = useState({
-    title: 'История России XIX века',
+    title: '',
     description: '',
-    category: 'История',
+    categoryId: '',
     accessType: 'public',
   });
+  const [createdQuiz, setCreatedQuiz] = useState(null);
   const [participantRoom, setParticipantRoom] = useState({
     quizTitle: 'История России XIX века',
     organizerName: 'Алексей К.',
@@ -90,6 +91,7 @@ function App() {
     localStorage.removeItem('quizzy_token');
     localStorage.removeItem('quizzy_user');
     setCurrentUser(null);
+    setCreatedQuiz(null);
     navigate('/');
   };
 
@@ -164,19 +166,18 @@ function App() {
               {...protectedPageProps}
               quizDraft={quizDraft}
               onChangeQuizDraft={setQuizDraft}
-              onOpenAddQuestions={() => navigate('/add-questions')}
+              onQuizCreated={setCreatedQuiz}
             />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/add-questions"
+        path="/quizzes/:quizId/questions"
         element={
           <ProtectedRoute>
             <AddQuestionsPage
               {...protectedPageProps}
-              quizTitle={quizDraft.title}
-              accessType={quizDraft.accessType}
+              createdQuiz={createdQuiz}
               onOpenWaitingRoom={() => navigate('/waiting-room')}
             />
           </ProtectedRoute>
@@ -188,8 +189,8 @@ function App() {
           <ProtectedRoute>
             <WaitingRoomPage
               {...protectedPageProps}
-              quizTitle={quizDraft.title}
-              accessType={quizDraft.accessType}
+              quizTitle={createdQuiz?.title || quizDraft.title}
+              accessType={createdQuiz?.access_type || quizDraft.accessType}
               onOpenHostQuiz={() => navigate('/host-quiz')}
             />
           </ProtectedRoute>

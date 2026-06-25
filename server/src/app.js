@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 const app = express();
 
@@ -9,7 +11,6 @@ const allowedOriginPattern = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow server-to-server requests and local Vite dev hosts.
       if (!origin || allowedOriginPattern.test(origin)) {
         return callback(null, true);
       }
@@ -27,6 +28,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Маршрут не найден' });
