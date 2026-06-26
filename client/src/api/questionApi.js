@@ -27,12 +27,16 @@ async function request(url, options = {}) {
   }
 }
 
-export function getCategories() {
-  return request(`${API_URL}/categories`);
+export function getQuizQuestions(quizId, token) {
+  return request(`${API_URL}/quizzes/${quizId}/questions`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }
 
-export function createQuiz(payload, token) {
-  return request(`${API_URL}/quizzes`, {
+export function createQuestion(quizId, payload, token) {
+  return request(`${API_URL}/quizzes/${quizId}/questions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -42,8 +46,8 @@ export function createQuiz(payload, token) {
   });
 }
 
-export function updateQuiz(quizId, payload, token) {
-  return request(`${API_URL}/quizzes/${quizId}`, {
+export function updateQuestion(questionId, payload, token) {
+  return request(`${API_URL}/questions/${questionId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -53,18 +57,24 @@ export function updateQuiz(quizId, payload, token) {
   });
 }
 
-export function getMyQuizzes(token) {
-  return request(`${API_URL}/quizzes/my`, {
+export function deleteQuestion(questionId, token) {
+  return request(`${API_URL}/questions/${questionId}`, {
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 }
 
-export function getQuizById(quizId, token) {
-  return request(`${API_URL}/quizzes/${quizId}`, {
+export function uploadQuestionImage(file, token) {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  return request(`${API_URL}/uploads/question-image`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    body: formData,
   });
 }

@@ -40,12 +40,6 @@ function ProtectedRoute({ children }) {
 function App() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(() => readStoredUser());
-  const [quizDraft, setQuizDraft] = useState({
-    title: '',
-    description: '',
-    categoryId: '',
-    accessType: 'public',
-  });
   const [createdQuiz, setCreatedQuiz] = useState(null);
   const [participantRoom, setParticipantRoom] = useState({
     quizTitle: 'История России XIX века',
@@ -162,12 +156,15 @@ function App() {
         path="/create-quiz"
         element={
           <ProtectedRoute>
-            <CreateQuizPage
-              {...protectedPageProps}
-              quizDraft={quizDraft}
-              onChangeQuizDraft={setQuizDraft}
-              onQuizCreated={setCreatedQuiz}
-            />
+            <CreateQuizPage {...protectedPageProps} onQuizSaved={setCreatedQuiz} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/quizzes/:quizId/edit"
+        element={
+          <ProtectedRoute>
+            <CreateQuizPage {...protectedPageProps} onQuizSaved={setCreatedQuiz} />
           </ProtectedRoute>
         }
       />
@@ -189,8 +186,8 @@ function App() {
           <ProtectedRoute>
             <WaitingRoomPage
               {...protectedPageProps}
-              quizTitle={createdQuiz?.title || quizDraft.title}
-              accessType={createdQuiz?.access_type || quizDraft.accessType}
+              quizTitle={createdQuiz?.title || 'Без названия'}
+              accessType={createdQuiz?.access_type || 'public'}
               onOpenHostQuiz={() => navigate('/host-quiz')}
             />
           </ProtectedRoute>

@@ -1,8 +1,12 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
+const multer = require('multer');
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const quizRoutes = require('./routes/quizRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
@@ -22,6 +26,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -30,6 +35,28 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/uploads', uploadRoutes);
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        message: 'Размер изображения не должен превышать 5 MB',
+        field: 'image',
+      });
+    }
+  }
+
+  if (error?.field === 'image' || error?.status === 400) {
+    return res.status(error.status || 400).json({
+      message: error.message || 'Ошибка загрузки изображения',
+      field: error.field || 'image',
+    });
+  }
+
+  return next(error);
+});
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Маршрут не найден' });

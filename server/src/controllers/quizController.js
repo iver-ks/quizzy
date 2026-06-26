@@ -7,11 +7,7 @@ function normalizeTitle(title) {
 }
 
 function normalizeDescription(description) {
-  if (typeof description !== 'string') {
-    return '';
-  }
-
-  return description.trim();
+  return typeof description === 'string' ? description.trim() : '';
 }
 
 function validateQuizPayload({ title, description, category_id: categoryId, access_type: accessType }) {
@@ -62,6 +58,42 @@ function validateQuizPayload({ title, description, category_id: categoryId, acce
   };
 }
 
+async function getOwnedQuiz(quizId, userId) {
+  const result = await pool.query(
+    `SELECT quiz_id, creator_id, category_id, title, description, access_type, status, created_at, updated_at
+     FROM quizzes
+     WHERE quiz_id = $1
+     LIMIT 1`,
+    [quizId]
+  );
+
+  if (result.rows.length === 0) {
+    return { error: { status: 404, message: 'Квиз не найден' } };
+  }
+
+  const quiz = result.rows[0];
+
+  if (String(quiz.creator_id) !== String(userId)) {
+    return {
+      error: {
+        status: 403,
+        message: 'У вас нет доступа к редактированию этого квиза',
+      },
+    };
+  }
+
+  return { quiz };
+}
+
+async function ensureCategoryExists(categoryId) {
+  const categoryResult = await pool.query(
+    'SELECT category_id FROM categories WHERE category_id = $1 LIMIT 1',
+    [categoryId]
+  );
+
+  return categoryResult.rows.length > 0;
+}
+
 async function createQuiz(req, res) {
   const validation = validateQuizPayload(req.body);
 
@@ -72,12 +104,9 @@ async function createQuiz(req, res) {
   const { title, description, categoryId, accessType } = validation.value;
 
   try {
-    const categoryResult = await pool.query(
-      'SELECT category_id FROM categories WHERE category_id = $1 LIMIT 1',
-      [categoryId]
-    );
+    const hasCategory = await ensureCategoryExists(categoryId);
 
-    if (categoryResult.rows.length === 0) {
+    if (!hasCategory) {
       return res.status(404).json({ message: 'Категория не найдена', field: 'category_id' });
     }
 
@@ -92,6 +121,53 @@ async function createQuiz(req, res) {
   } catch (error) {
     console.error('Create quiz error:', error);
     return res.status(500).json({ message: 'Ошибка сервера при создании квиза' });
+  }
+}
+
+async function updateQuiz(req, res) {
+  const quizId = Number(req.params.quizId);
+
+  if (!Number.isInteger(quizId) || quizId <= 0) {
+    return res.status(400).json({ message: 'Некорректный идентификатор квиза' });
+  }
+
+  const validation = validateQuizPayload(req.body);
+
+  if (validation.message) {
+    return res.status(400).json(validation);
+  }
+
+  const { title, description, categoryId, accessType } = validation.value;
+
+  try {
+    const ownership = await getOwnedQuiz(quizId, req.user.user_id);
+
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ message: ownership.error.message });
+    }
+
+    const hasCategory = await ensureCategoryExists(categoryId);
+
+    if (!hasCategory) {
+      return res.status(404).json({ message: 'Категория не найдена', field: 'category_id' });
+    }
+
+    const result = await pool.query(
+      `UPDATE quizzes
+       SET title = $1,
+           description = $2,
+           category_id = $3,
+           access_type = $4,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE quiz_id = $5
+       RETURNING quiz_id, creator_id, category_id, title, description, access_type, status, created_at, updated_at`,
+      [title, description || null, categoryId, accessType, quizId]
+    );
+
+    return res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update quiz error:', error);
+    return res.status(500).json({ message: 'Ошибка сервера при обновлении квиза' });
   }
 }
 
@@ -120,19 +196,13 @@ async function getQuizById(req, res) {
   }
 
   try {
-    const result = await pool.query(
-      `SELECT quiz_id, creator_id, category_id, title, description, access_type, status, created_at, updated_at
-       FROM quizzes
-       WHERE quiz_id = $1 AND creator_id = $2
-       LIMIT 1`,
-      [quizId, req.user.user_id]
-    );
+    const ownership = await getOwnedQuiz(quizId, req.user.user_id);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Квиз не найден' });
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ message: ownership.error.message });
     }
 
-    return res.json(result.rows[0]);
+    return res.json(ownership.quiz);
   } catch (error) {
     console.error('Get quiz by id error:', error);
     return res.status(500).json({ message: 'Ошибка сервера при получении квиза' });
@@ -141,6 +211,7 @@ async function getQuizById(req, res) {
 
 module.exports = {
   createQuiz,
+  updateQuiz,
   getMyQuizzes,
   getQuizById,
 };

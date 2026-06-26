@@ -5,6 +5,7 @@ client/.vite/
 server/node_modules/
 server/*.log
 server/.env
+server/src/uploads/
 .DS_Store
 Thumbs.db
 Desktop.ini
