@@ -1,16 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { cancelSession, getSessionById } from '../api/sessionApi';
 import Header from '../components/Header';
 import '../styles/waitingRoom.css';
-
-const participants = [
-  'Мария С.',
-  'Алексей К.',
-  'Иван Д.',
-  'Анна В.',
-  'Дмитрий П.',
-  'Елена Р.',
-  'Сергей Н.',
-];
 
 function PlayIcon() {
   return (
@@ -49,38 +41,190 @@ function LockIcon() {
   );
 }
 
+function getSessionStatusMessage(status, fallback = '') {
+  if (status === 'active') {
+    return 'Квиз уже начался';
+  }
+
+  if (status === 'finished' || status === 'cancelled') {
+    return 'Комната закрыта';
+  }
+
+  return fallback || 'Не удалось загрузить данные комнаты';
+}
+
 function WaitingRoomPage({
   currentUser,
   onLogout,
-  quizTitle,
-  accessType = 'public',
   onOpenHome,
   onOpenCreateQuiz,
-  onOpenHostQuiz,
   onJoinByCodeSuccess,
 }) {
-  const roomCode = useMemo(() => String(Math.floor(100000 + Math.random() * 900000)), []);
-  const storageKey = `quizzy-room-code-copied-${roomCode}`;
+  const navigate = useNavigate();
+  const { sessionId } = useParams();
+  const [session, setSession] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [startMessage, setStartMessage] = useState('');
+  const hasSentCancelRef = useRef(false);
+  const shouldCloseRoomRef = useRef(true);
 
   useEffect(() => {
-    setCopied(window.sessionStorage.getItem(storageKey) === 'true');
-  }, [storageKey]);
+    const token = sessionStorage.getItem('quizzy_token');
+
+    if (!token || !sessionId) {
+      shouldCloseRoomRef.current = false;
+      setPageError('Требуется авторизация');
+      setIsLoading(false);
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    function sendCancelRequest() {
+      if (!shouldCloseRoomRef.current || hasSentCancelRef.current) {
+        return;
+      }
+
+      hasSentCancelRef.current = true;
+      cancelSession(sessionId, token, true).catch(() => {
+        hasSentCancelRef.current = false;
+      });
+    }
+
+    async function loadSession(showLoader = false) {
+      if (showLoader && isMounted) {
+        setIsLoading(true);
+      }
+
+      try {
+        const sessionData = await getSessionById(sessionId, token);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (sessionData?.status && sessionData.status !== 'waiting') {
+          shouldCloseRoomRef.current = false;
+          setPageError(getSessionStatusMessage(sessionData.status));
+          navigate('/home');
+          return;
+        }
+
+        shouldCloseRoomRef.current = true;
+        setSession(sessionData);
+        setPageError('');
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        shouldCloseRoomRef.current = false;
+
+        if (error.status === 404) {
+          setPageError('Комната не найдена');
+          navigate('/home');
+          return;
+        }
+
+        if (error.status === 403) {
+          setPageError('У вас нет доступа к этой комнате');
+          navigate('/home');
+          return;
+        }
+
+        setPageError(error.message || 'Не удалось загрузить данные комнаты');
+      } finally {
+        if (showLoader && isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadSession(true);
+
+    const intervalId = window.setInterval(() => {
+      loadSession(false);
+    }, 1000);
+
+    window.addEventListener('pagehide', sendCancelRequest);
+    window.addEventListener('beforeunload', sendCancelRequest);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('pagehide', sendCancelRequest);
+      window.removeEventListener('beforeunload', sendCancelRequest);
+      sendCancelRequest();
+    };
+  }, [navigate, sessionId]);
 
   async function handleCopyCode() {
+    if (!session?.room_code) {
+      return;
+    }
+
     try {
-      await navigator.clipboard.writeText(roomCode);
+      await navigator.clipboard.writeText(session.room_code);
       setCopied(true);
-      window.sessionStorage.setItem(storageKey, 'true');
     } catch {
       setCopied(false);
     }
   }
 
-  const isPrivate = accessType === 'private';
+  function handleStartQuiz() {
+    setStartMessage('Запуск квиза будет реализован на следующем этапе');
+  }
+
+  if (isLoading) {
+    return (
+      <div className="waiting-room-page">
+        <Header
+          userName={currentUser?.name || 'Quizzy'}
+          onLogout={onLogout}
+          onOpenHome={onOpenHome}
+          onOpenCreateQuiz={onOpenCreateQuiz}
+          onJoinByCodeSuccess={onJoinByCodeSuccess}
+        />
+        <main className="waiting-room-main">
+          <div className="waiting-room-container waiting-room-shell">
+            <section className="waiting-room-card">
+              <p className="add-questions-page-message">Загрузка комнаты ожидания...</p>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <div className="waiting-room-page">
+        <Header
+          userName={currentUser?.name || 'Quizzy'}
+          onLogout={onLogout}
+          onOpenHome={onOpenHome}
+          onOpenCreateQuiz={onOpenCreateQuiz}
+          onJoinByCodeSuccess={onJoinByCodeSuccess}
+        />
+        <main className="waiting-room-main">
+          <div className="waiting-room-container waiting-room-shell">
+            <section className="waiting-room-card">
+              <p className="add-questions-page-error">{pageError}</p>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const isPrivate = session?.quiz?.access_type === 'private';
   const statusText = isPrivate
     ? 'Квиз доступен только по коду комнаты'
     : 'Квиз отображается на главной странице';
+  const participants = session?.participants || [];
+  const participantsCount = session?.participants_count ?? participants.length;
 
   return (
     <div className="waiting-room-page">
@@ -97,11 +241,11 @@ function WaitingRoomPage({
           <section className="waiting-room-card">
             <div className="waiting-room-card-top">
               <div className="waiting-room-title-block">
-                <h1>{quizTitle || 'Без названия'}</h1>
+                <h1>{session?.quiz?.title || 'Без названия'}</h1>
                 <p>{statusText}</p>
               </div>
 
-              <div className={`waiting-room-badge waiting-room-badge-${accessType}`}>
+              <div className={`waiting-room-badge waiting-room-badge-${session?.quiz?.access_type || 'public'}`}>
                 <span className="waiting-room-badge-icon">
                   {isPrivate ? <LockIcon /> : <GlobeIcon />}
                 </span>
@@ -111,12 +255,12 @@ function WaitingRoomPage({
 
             <div className="waiting-room-code-panel">
               <p>Код комнаты</p>
-              <strong>{roomCode}</strong>
+              <strong>{session?.room_code}</strong>
               <button type="button" className="waiting-room-copy-btn" onClick={handleCopyCode}>
                 <span className="waiting-room-copy-icon">
                   <CopyIcon />
                 </span>
-                <span>{copied ? 'Скопировано' : 'Скопировать код'}</span>
+                <span>{copied ? 'Код скопирован' : 'Скопировать код'}</span>
               </button>
             </div>
 
@@ -125,24 +269,39 @@ function WaitingRoomPage({
                 <span className="waiting-room-status-dot" />
                 <span>Ожидает участников</span>
               </div>
-              <span className="waiting-room-count">{participants.length} подключились</span>
+              <span className="waiting-room-count">{participantsCount} подключились</span>
             </div>
 
             <div className="waiting-room-participants-grid">
-              {participants.map((participant) => (
-                <div key={participant} className="waiting-room-participant-chip">
-                  <span className="waiting-room-participant-avatar">{participant.charAt(0)}</span>
-                  <span className="waiting-room-participant-name">{participant}</span>
-                </div>
-              ))}
+              {participants.length > 0 ? (
+                participants.map((participant) => (
+                  <div
+                    key={participant.participant_id || `${participant.user_id}-${participant.joined_at}`}
+                    className="waiting-room-participant-chip"
+                  >
+                    <span className="waiting-room-participant-avatar">
+                      {(participant.name || '?').charAt(0).toUpperCase()}
+                    </span>
+                    <span className="waiting-room-participant-name">
+                      {participant.name || 'Участник'}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="waiting-room-empty-text">Пока участников нет</p>
+              )}
             </div>
 
-            <button type="button" className="waiting-room-start-btn" onClick={onOpenHostQuiz}>
-              <span className="waiting-room-start-icon">
-                <PlayIcon />
-              </span>
-              <span>Начать квиз</span>
-            </button>
+            {startMessage ? <p className="add-questions-page-message">{startMessage}</p> : null}
+
+            <div className="waiting-room-actions-stack">
+              <button type="button" className="waiting-room-start-btn" onClick={handleStartQuiz}>
+                <span className="waiting-room-start-icon">
+                  <PlayIcon />
+                </span>
+                <span>Начать квиз</span>
+              </button>
+            </div>
           </section>
         </div>
       </main>

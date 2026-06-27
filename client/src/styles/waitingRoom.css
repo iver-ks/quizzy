@@ -312,6 +312,13 @@
   gap: 10px 12px;
 }
 
+.waiting-room-empty-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.96rem;
+  color: #7b7f95;
+}
+
 .waiting-room-participant-chip {
   min-height: 40px;
   padding: 0 14px;
@@ -324,16 +331,17 @@
 }
 
 .waiting-room-participant-avatar {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--wait-purple);
-  color: #ffffff;
+  background: #efe9ff;
+  color: #6c4de6;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.86rem;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .waiting-room-participant-name {
@@ -344,14 +352,23 @@
 .waiting-room-start-btn {
   width: 100%;
   min-height: 50px;
-  margin-top: 20px;
+  margin-top: 35px;
   background: var(--wait-purple);
   color: #ffffff;
 }
 
+.waiting-room-actions-stack {
+  margin-top: 35px;
+  display: grid;
+  gap: 12px;
+}
+
+.waiting-room-actions-stack .waiting-room-start-btn {
+  margin-top: 0;
+}
+
 .waiting-room-start-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 24px rgba(106, 82, 227, 0.2);
+  box-shadow: 0 0 24px rgba(106, 82, 227, 0.24);
 }
 
 @media (max-width: 900px) {

@@ -100,7 +100,7 @@ function CreateQuizPage({
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('quizzy_token');
+    const token = sessionStorage.getItem('quizzy_token');
     let isMounted = true;
 
     async function loadPage() {
@@ -202,7 +202,7 @@ function CreateQuizPage({
       return;
     }
 
-    const token = localStorage.getItem('quizzy_token');
+    const token = sessionStorage.getItem('quizzy_token');
 
     if (!token) {
       navigate('/login');

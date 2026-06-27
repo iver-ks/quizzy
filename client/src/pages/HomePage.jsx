@@ -1,61 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { getPublicWaitingQuizzes } from '../api/quizApi';
+import { joinSessionById } from '../api/sessionApi';
 import logoIcon from '../assets/quizzy-logo.png';
 import emptyStateImage from '../assets/images/no_quizs.png';
 import Header from '../components/Header';
 import '../styles/home.css';
 
-const categories = ['Все', 'История', 'Математика', 'IT', 'Биология', 'Языки', 'Другое'];
-
-const publicQuizzes = [
-  {
-    title: 'История России XIX века',
-    category: 'История',
-    questions: 15,
-    host: 'Алексей К.',
-    players: '2/10',
-    roomCode: '482913',
-  },
-  {
-    title: 'Математика: Алгебра 9 класс',
-    category: 'Математика',
-    questions: 20,
-    host: 'Мария С.',
-    players: '7/10',
-    roomCode: '518204',
-  },
-  {
-    title: 'Общие знания: Мировая культура',
-    category: 'Другое',
-    questions: 12,
-    host: 'Дмитрий П.',
-    players: '5/12',
-    roomCode: '631577',
-  },
-  {
-    title: 'Программирование на Python',
-    category: 'IT',
-    questions: 18,
-    host: 'Анна В.',
-    players: '9/15',
-    roomCode: '246801',
-  },
-  {
-    title: 'Биология: Клетка и её строение',
-    category: 'Биология',
-    questions: 10,
-    host: 'Сергей Н.',
-    players: '3/10',
-    roomCode: '774320',
-  },
-  {
-    title: 'Английский язык: Intermediate',
-    category: 'Языки',
-    questions: 25,
-    host: 'Ольга Т.',
-    players: '6/15',
-    roomCode: '905114',
-  },
-];
+const ALL_CATEGORIES_LABEL = 'Все';
 
 function SearchIcon() {
   return (
@@ -86,30 +37,123 @@ function BookIcon() {
   );
 }
 
-function HomePage({
-  currentUser,
-  onLogout,
-  onOpenHome,
-  onOpenCreateQuiz,
-  onJoinByCodeSuccess,
-  onOpenParticipantWaiting,
-}) {
+function HomePage({ currentUser, onLogout, onOpenHome, onOpenCreateQuiz, onJoinByCodeSuccess }) {
   const [searchValue, setSearchValue] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Все');
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES_LABEL);
+  const [publicQuizzes, setPublicQuizzes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [joinMessageByQuizId, setJoinMessageByQuizId] = useState({});
+  const [joiningQuizId, setJoiningQuizId] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const token = sessionStorage.getItem('quizzy_token');
+
+    async function loadPublicQuizzes(showLoader = false) {
+      try {
+        if (showLoader && isMounted) {
+          setIsLoading(true);
+        }
+        if (isMounted) {
+          setLoadingError('');
+        }
+
+        const quizzes = await getPublicWaitingQuizzes(token);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setPublicQuizzes(Array.isArray(quizzes) ? quizzes : []);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setLoadingError(error.message || 'Не удалось загрузить публичные квизы');
+      } finally {
+        if (showLoader && isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadPublicQuizzes(true);
+
+    const intervalId = window.setInterval(() => {
+      loadPublicQuizzes(false);
+    }, 1000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const categories = useMemo(() => {
+    const uniqueCategories = Array.from(
+      new Set(
+        publicQuizzes
+          .map((quiz) => quiz.category)
+          .filter((category) => typeof category === 'string' && category.trim().length > 0)
+      )
+    ).sort((left, right) => left.localeCompare(right, 'ru'));
+
+    return [ALL_CATEGORIES_LABEL, ...uniqueCategories];
+  }, [publicQuizzes]);
 
   const filteredQuizzes = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
 
     return publicQuizzes.filter((quiz) => {
-      const matchesCategory = selectedCategory === 'Все' || quiz.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === ALL_CATEGORIES_LABEL || quiz.category === selectedCategory;
       const matchesSearch =
         normalizedSearch.length === 0 || quiz.title.toLowerCase().includes(normalizedSearch);
 
       return matchesCategory && matchesSearch;
     });
-  }, [searchValue, selectedCategory]);
+  }, [publicQuizzes, searchValue, selectedCategory]);
 
   const isSearchActive = searchValue.trim().length > 0;
+
+  const handleJoinClick = async (quiz) => {
+    const token = sessionStorage.getItem('quizzy_token');
+
+    if (String(quiz.creator_id) === String(currentUser?.user_id)) {
+      setJoinMessageByQuizId((current) => ({
+        ...current,
+        [quiz.quiz_id]: 'Автор не может подключиться к своему квизу как участник',
+      }));
+      return;
+    }
+
+    if (!token) {
+      setJoinMessageByQuizId((current) => ({
+        ...current,
+        [quiz.quiz_id]: 'Требуется авторизация',
+      }));
+      return;
+    }
+
+    try {
+      setJoiningQuizId(quiz.quiz_id);
+      setJoinMessageByQuizId((current) => ({
+        ...current,
+        [quiz.quiz_id]: '',
+      }));
+      const session = await joinSessionById(quiz.session_id, token);
+      onJoinByCodeSuccess?.(session);
+    } catch (error) {
+      setJoinMessageByQuizId((current) => ({
+        ...current,
+        [quiz.quiz_id]: error.message || 'Не удалось подключиться к комнате',
+      }));
+    } finally {
+      setJoiningQuizId(null);
+    }
+  };
 
   return (
     <div className="home-page">
@@ -155,17 +199,25 @@ function HomePage({
             </label>
           </section>
 
-          {filteredQuizzes.length > 0 ? (
+          {isLoading ? (
+            <section className="home-status-card">
+              <p>Загрузка квизов...</p>
+            </section>
+          ) : loadingError ? (
+            <section className="home-status-card">
+              <p>{loadingError}</p>
+            </section>
+          ) : filteredQuizzes.length > 0 ? (
             <section className="home-grid">
               {filteredQuizzes.map((quiz) => (
-                <article key={`${quiz.title}-${quiz.host}`} className="quiz-public-card">
+                <article key={quiz.session_id} className="quiz-public-card">
                   <div className="quiz-public-top">
                     <h2 title={quiz.title}>{quiz.title}</h2>
                     <div className="quiz-public-players">
                       <span className="quiz-inline-icon">
                         <UsersIcon />
                       </span>
-                      <span>{quiz.players}</span>
+                      <span>{quiz.participants_count}</span>
                     </div>
                   </div>
 
@@ -182,25 +234,32 @@ function HomePage({
                       <span className="quiz-inline-icon">
                         <BookIcon />
                       </span>
-                      <span>{quiz.questions} вопросов</span>
+                      <span>{quiz.questions_count} вопросов</span>
                     </div>
-                    <p>Организатор: {quiz.host}</p>
+                    <p>Автор: {quiz.creator_name}</p>
                   </div>
 
                   <button
                     type="button"
                     className="quiz-public-join"
-                    onClick={() =>
-                      onOpenParticipantWaiting?.({
-                        quizTitle: quiz.title,
-                        organizerName: quiz.host,
-                        roomCode: quiz.roomCode,
-                        participantsCount: Number.parseInt(quiz.players.split('/')[0], 10) || 0,
-                      })
-                    }
+                    onClick={() => handleJoinClick(quiz)}
+                    disabled={joiningQuizId === quiz.quiz_id}
                   >
-                    Подключиться
+                    {joiningQuizId === quiz.quiz_id ? 'Подключение...' : 'Подключиться'}
                   </button>
+
+                  {joinMessageByQuizId[quiz.quiz_id] ? (
+                    <p
+                      className={`quiz-public-note${
+                        joinMessageByQuizId[quiz.quiz_id] ===
+                        'Автор не может подключиться к своему квизу как участник'
+                          ? ' is-error'
+                          : ''
+                      }`}
+                    >
+                      {joinMessageByQuizId[quiz.quiz_id]}
+                    </p>
+                  ) : null}
                 </article>
               ))}
             </section>

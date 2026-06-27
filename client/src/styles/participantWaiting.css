@@ -194,6 +194,46 @@
   margin-top: 1px;
 }
 
+.participant-waiting-message,
+.participant-waiting-error {
+  margin: 0;
+  text-align: center;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.participant-waiting-message {
+  color: #4c5066;
+}
+
+.participant-waiting-error {
+  color: #d34848;
+}
+
+.participant-waiting-leave-btn {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 14px;
+  background: #684fdc;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: box-shadow 0.22s ease, opacity 0.22s ease;
+}
+
+.participant-waiting-leave-btn:hover {
+  box-shadow: 0 0 24px rgba(104, 79, 220, 0.25);
+}
+
+.participant-waiting-leave-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 @media (max-width: 640px) {
   .participant-waiting-main {
     padding: 20px 14px;

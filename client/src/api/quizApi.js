@@ -68,3 +68,13 @@ export function getQuizById(quizId, token) {
     },
   });
 }
+
+export function getPublicWaitingQuizzes(token) {
+  return request(`${API_URL}/quizzes/public-waiting`, {
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {},
+  });
+}

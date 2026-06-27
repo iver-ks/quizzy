@@ -209,9 +209,59 @@ async function getQuizById(req, res) {
   }
 }
 
+async function getPublicWaitingQuizzes(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+         q.quiz_id,
+         q.creator_id,
+         qs.session_id,
+         q.title,
+         q.description,
+         COALESCE(c.name, 'Другое') AS category,
+         u.name AS creator_name,
+         COUNT(DISTINCT question_rows.question_id)::int AS questions_count,
+         COUNT(DISTINCT sp.participant_id)::int AS participants_count,
+         q.access_type,
+         q.status AS quiz_status,
+         qs.status AS session_status,
+         qs.created_at
+       FROM quizzes q
+       INNER JOIN quiz_sessions qs ON qs.quiz_id = q.quiz_id
+       INNER JOIN users u ON u.user_id = q.creator_id
+       LEFT JOIN categories c ON c.category_id = q.category_id
+       LEFT JOIN questions question_rows ON question_rows.quiz_id = q.quiz_id
+       LEFT JOIN session_participants sp ON sp.session_id = qs.session_id
+       WHERE q.access_type = 'public'
+         AND q.status = 'waiting'
+         AND qs.status = 'waiting'
+       GROUP BY
+         q.quiz_id,
+         q.creator_id,
+         qs.session_id,
+         q.title,
+         q.description,
+         c.name,
+         u.name,
+         q.access_type,
+         q.status,
+         qs.status,
+         qs.created_at
+       HAVING COUNT(DISTINCT question_rows.question_id) > 0
+       ORDER BY qs.created_at DESC, q.quiz_id DESC`
+    );
+
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Get public waiting quizzes error:', error);
+    return res.status(500).json({ message: 'Ошибка сервера при получении публичных квизов' });
+  }
+}
+
 module.exports = {
   createQuiz,
   updateQuiz,
   getMyQuizzes,
   getQuizById,
+  getPublicWaitingQuizzes,
 };

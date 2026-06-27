@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
+import { joinSessionByCode } from '../api/sessionApi';
 import '../styles/joinByCodeModal.css';
-
-const TEST_ROOM_CODE = '482913';
 
 function JoinByCodeModal({ isOpen, onClose, onJoinSuccess }) {
   const [code, setCode] = useState('');
-  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -28,7 +28,8 @@ function JoinByCodeModal({ isOpen, onClose, onJoinSuccess }) {
   useEffect(() => {
     if (!isOpen) {
       setCode('');
-      setShowError(false);
+      setErrorMessage('');
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -36,16 +37,33 @@ function JoinByCodeModal({ isOpen, onClose, onJoinSuccess }) {
     return null;
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (code.trim() !== TEST_ROOM_CODE) {
-      setShowError(true);
+    const trimmedCode = code.trim();
+
+    if (!trimmedCode) {
+      setErrorMessage('Введите код комнаты');
       return;
     }
 
-    setShowError(false);
-    onJoinSuccess?.({ roomCode: code.trim() });
+    const token = sessionStorage.getItem('quizzy_token');
+
+    if (!token) {
+      setErrorMessage('Требуется авторизация');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setErrorMessage('');
+      const session = await joinSessionByCode(trimmedCode, token);
+      onJoinSuccess?.(session);
+    } catch (error) {
+      setErrorMessage(error.message || 'Не удалось подключиться к комнате');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -83,21 +101,19 @@ function JoinByCodeModal({ isOpen, onClose, onJoinSuccess }) {
               value={code}
               onChange={(event) => {
                 setCode(event.target.value);
-                if (showError) {
-                  setShowError(false);
+                if (errorMessage) {
+                  setErrorMessage('');
                 }
               }}
-              className={`join-by-code-modal-input${showError ? ' is-error' : ''}`}
+              className={`join-by-code-modal-input${errorMessage ? ' is-error' : ''}`}
               placeholder="Например: 482913"
               autoComplete="off"
             />
 
-            {showError ? (
-              <p className="join-by-code-modal-error">Комната с таким кодом не найдена</p>
-            ) : null}
+            {errorMessage ? <p className="join-by-code-modal-error">{errorMessage}</p> : null}
 
-            <button type="submit" className="join-by-code-modal-submit">
-              Подключиться
+            <button type="submit" className="join-by-code-modal-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Подключение...' : 'Подключиться'}
             </button>
           </form>
         </div>

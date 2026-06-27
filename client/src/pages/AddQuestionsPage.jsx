@@ -8,6 +8,7 @@ import {
   updateQuestion,
   uploadQuestionImage,
 } from '../api/questionApi';
+import { startQuizSession } from '../api/sessionApi';
 import Header from '../components/Header';
 import '../styles/addQuestions.css';
 
@@ -131,10 +132,12 @@ function validateQuestion(question) {
   } else {
     for (const option of question.options) {
       const trimmedOptionText = option.option_text.trim();
+
       if (!trimmedOptionText) {
         errors.options = 'Вариант ответа не может быть пустым';
         break;
       }
+
       if (trimmedOptionText.length > 200) {
         errors.options = 'Вариант ответа не должен быть длиннее 200 символов';
         break;
@@ -143,9 +146,11 @@ function validateQuestion(question) {
   }
 
   const correctOptionsCount = question.options.filter((option) => option.is_correct).length;
+
   if (question.answer_type === 'single' && correctOptionsCount !== 1) {
     errors.options = 'Для вопроса с одним ответом выберите один правильный вариант';
   }
+
   if (question.answer_type === 'multiple' && correctOptionsCount < 1) {
     errors.options =
       'Для вопроса с несколькими ответами выберите хотя бы один правильный вариант';
@@ -220,7 +225,6 @@ function AddQuestionsPage({
   createdQuiz,
   onOpenHome,
   onOpenCreateQuiz,
-  onOpenWaitingRoom,
   onJoinByCodeSuccess,
 }) {
   const navigate = useNavigate();
@@ -240,7 +244,7 @@ function AddQuestionsPage({
   }, [questions, activeQuestionId]);
 
   useEffect(() => {
-    const token = localStorage.getItem('quizzy_token');
+    const token = sessionStorage.getItem('quizzy_token');
 
     if (!token || !quizId) {
       setPageError('Требуется авторизация');
@@ -450,7 +454,7 @@ function AddQuestionsPage({
 
   function handleDeleteQuestion(questionClientId) {
     const questionToDelete = questions.find((question) => question.clientId === questionClientId);
-    const token = localStorage.getItem('quizzy_token');
+    const token = sessionStorage.getItem('quizzy_token');
 
     async function deleteStoredQuestion() {
       if (questionToDelete?.question_id && token) {
@@ -546,6 +550,7 @@ function AddQuestionsPage({
       }
 
       let imageError = '';
+
       if (!IMAGE_TYPES.has(file.type)) {
         imageError = 'Разрешены только изображения JPG, JPEG, PNG и WEBP';
       } else if (file.size > MAX_IMAGE_SIZE) {
@@ -565,13 +570,15 @@ function AddQuestionsPage({
   }
 
   async function persistQuestion(question) {
-    const token = localStorage.getItem('quizzy_token');
+    const token = sessionStorage.getItem('quizzy_token');
+
     if (!token) {
       setTopMessage('Требуется авторизация');
       return;
     }
 
     const validationErrors = validateQuestion(question);
+
     if (Object.keys(validationErrors).length > 0) {
       setQuestionError(question.clientId, validationErrors);
       return;
@@ -665,7 +672,24 @@ function AddQuestionsPage({
       return;
     }
 
-    setTopMessage('Запуск квиза будет реализован на следующем этапе.');
+    if (!activeQuestion.question_id || activeQuestion.isDirty) {
+      setTopMessage('Сначала сохраните текущий вопрос');
+      return;
+    }
+
+    const token = sessionStorage.getItem('quizzy_token');
+
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const session = await startQuizSession(quizId, token);
+      navigate(`/sessions/${session.session_id}/waiting`);
+    } catch (error) {
+      setTopMessage(error.message || 'Не удалось запустить комнату ожидания');
+    }
   }
 
   if (isLoading) {
@@ -733,20 +757,23 @@ function AddQuestionsPage({
               <button type="button" className="add-questions-save-btn" onClick={handleSaveActiveQuestion}>
                 Сохранить квиз
               </button>
-              <button
-                type="button"
-                className="add-questions-launch-btn"
-                onClick={handleLaunchQuiz}
-              >
-                <span className="add-questions-launch-icon">
-                  <PlayIcon />
-                </span>
-                <span>Запустить квиз</span>
-              </button>
+              <div className="add-questions-launch-wrap">
+                <button type="button" className="add-questions-launch-btn" onClick={handleLaunchQuiz}>
+                  <span className="add-questions-launch-icon">
+                    <PlayIcon />
+                  </span>
+                  <span>Запустить квиз</span>
+                </button>
+                {topMessage === 'Добавьте хотя бы один вопрос' ? (
+                  <p className="add-questions-launch-error">{topMessage}</p>
+                ) : null}
+              </div>
             </div>
           </section>
 
-          {topMessage ? <p className="add-questions-page-message">{topMessage}</p> : null}
+          {topMessage && topMessage !== 'Добавьте хотя бы один вопрос' ? (
+            <p className="add-questions-page-message">{topMessage}</p>
+          ) : null}
 
           <section className="add-questions-layout">
             <aside className="questions-sidebar-card">
@@ -951,9 +978,7 @@ function AddQuestionsPage({
                     </select>
                   </div>
                   {activeQuestion.errors.time_limit_seconds ? (
-                    <p className="add-questions-error-text">
-                      {activeQuestion.errors.time_limit_seconds}
-                    </p>
+                    <p className="add-questions-error-text">{activeQuestion.errors.time_limit_seconds}</p>
                   ) : null}
                 </div>
 
