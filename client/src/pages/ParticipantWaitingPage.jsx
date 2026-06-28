@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getParticipantSession, leaveSession } from '../api/sessionApi';
+import { socket } from '../socket/socket';
 import '../styles/participantWaiting.css';
 
 const WAITING_RULES = [
@@ -29,18 +30,6 @@ function CheckIcon() {
   );
 }
 
-function getSessionStatusMessage(status, fallback = '') {
-  if (status === 'active') {
-    return 'Квиз уже начался';
-  }
-
-  if (status === 'finished' || status === 'cancelled') {
-    return 'Комната закрыта';
-  }
-
-  return fallback || 'Не удалось загрузить данные комнаты';
-}
-
 function ParticipantWaitingPage() {
   const navigate = useNavigate();
   const { sessionId } = useParams();
@@ -49,14 +38,26 @@ function ParticipantWaitingPage() {
   const [pageError, setPageError] = useState('');
   const [isLeaving, setIsLeaving] = useState(false);
   const hasSentLeaveRef = useRef(false);
+  const joinedRoomRef = useRef(false);
 
   useEffect(() => {
     const token = sessionStorage.getItem('quizzy_token');
+    const storedUser = sessionStorage.getItem('quizzy_user');
 
     if (!token || !sessionId) {
       setPageError('Требуется авторизация');
       setIsLoading(false);
       return undefined;
+    }
+
+    let userId = null;
+
+    if (storedUser) {
+      try {
+        userId = JSON.parse(storedUser)?.user_id ?? null;
+      } catch {
+        userId = null;
+      }
     }
 
     let isMounted = true;
@@ -84,9 +85,13 @@ function ParticipantWaitingPage() {
           return;
         }
 
-        if (sessionData?.status && sessionData.status !== 'waiting') {
-          hasSentLeaveRef.current = true;
-          setPageError(getSessionStatusMessage(sessionData.status));
+        if (sessionData.status === 'active') {
+          navigate(`/sessions/${sessionId}/play`);
+          return;
+        }
+
+        if (sessionData.status !== 'waiting') {
+          setPageError('Комната закрыта');
           navigate('/home');
           return;
         }
@@ -99,19 +104,6 @@ function ParticipantWaitingPage() {
         }
 
         hasSentLeaveRef.current = true;
-
-        if (error.status === 404) {
-          setPageError('Комната не найдена');
-          navigate('/home');
-          return;
-        }
-
-        if (error.status === 403) {
-          setPageError(error.message || 'Вы не подключены к этой комнате');
-          navigate('/home');
-          return;
-        }
-
         setPageError(error.message || 'Не удалось загрузить данные комнаты');
       } finally {
         if (showLoader && isMounted) {
@@ -120,11 +112,32 @@ function ParticipantWaitingPage() {
       }
     }
 
+    function handleQuizStarted(payload = {}) {
+      hasSentLeaveRef.current = true;
+      const nextPath = payload.redirectParticipantTo || `/sessions/${sessionId}/play`;
+      navigate(nextPath);
+    }
+
     loadSession(true);
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    if (!joinedRoomRef.current && userId) {
+      socket.emit('join_session_room', {
+        sessionId: Number(sessionId),
+        userId: Number(userId),
+        role: 'participant',
+      });
+      joinedRoomRef.current = true;
+    }
+
+    socket.on('quiz_started', handleQuizStarted);
 
     const intervalId = window.setInterval(() => {
       loadSession(false);
-    }, 1000);
+    }, 3000);
 
     window.addEventListener('pagehide', sendLeaveRequest);
     window.addEventListener('beforeunload', sendLeaveRequest);
@@ -134,6 +147,11 @@ function ParticipantWaitingPage() {
       window.clearInterval(intervalId);
       window.removeEventListener('pagehide', sendLeaveRequest);
       window.removeEventListener('beforeunload', sendLeaveRequest);
+      socket.off('quiz_started', handleQuizStarted);
+      joinedRoomRef.current = false;
+      if (socket.connected) {
+        socket.disconnect();
+      }
       sendLeaveRequest();
     };
   }, [navigate, sessionId]);
@@ -151,7 +169,7 @@ function ParticipantWaitingPage() {
       hasSentLeaveRef.current = true;
       await leaveSession(sessionId, token);
     } catch {
-      // Пользователь уже уходит со страницы, повторная попытка будет избыточной.
+      // Пользователь всё равно уходит на главную, повторная ошибка здесь не критична.
     } finally {
       navigate('/home');
     }
@@ -179,7 +197,7 @@ function ParticipantWaitingPage() {
               <div className="participant-waiting-status">
                 <div className="participant-waiting-status-row">
                   <span className="participant-waiting-status-dot" />
-                  <span>Ожидаем участников</span>
+                  <span>Ожидаем начала квиза</span>
                 </div>
                 <p>
                   Код комнаты: <strong>{session?.room_code}</strong>

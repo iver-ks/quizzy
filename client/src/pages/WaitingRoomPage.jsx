@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { cancelSession, getSessionById } from '../api/sessionApi';
+import { getSessionById, startSession } from '../api/sessionApi';
 import Header from '../components/Header';
+import { socket } from '../socket/socket';
 import '../styles/waitingRoom.css';
 
 function PlayIcon() {
@@ -41,18 +42,6 @@ function LockIcon() {
   );
 }
 
-function getSessionStatusMessage(status, fallback = '') {
-  if (status === 'active') {
-    return 'Квиз уже начался';
-  }
-
-  if (status === 'finished' || status === 'cancelled') {
-    return 'Комната закрыта';
-  }
-
-  return fallback || 'Не удалось загрузить данные комнаты';
-}
-
 function WaitingRoomPage({
   currentUser,
   onLogout,
@@ -66,32 +55,31 @@ function WaitingRoomPage({
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [startMessage, setStartMessage] = useState('');
-  const hasSentCancelRef = useRef(false);
-  const shouldCloseRoomRef = useRef(true);
+  const [isStarting, setIsStarting] = useState(false);
+  const [actionMessage, setActionMessage] = useState('');
+  const joinedRoomRef = useRef(false);
 
   useEffect(() => {
     const token = sessionStorage.getItem('quizzy_token');
+    const storedUser = sessionStorage.getItem('quizzy_user');
 
     if (!token || !sessionId) {
-      shouldCloseRoomRef.current = false;
       setPageError('Требуется авторизация');
       setIsLoading(false);
       return undefined;
     }
 
-    let isMounted = true;
+    let userId = currentUser?.user_id;
 
-    function sendCancelRequest() {
-      if (!shouldCloseRoomRef.current || hasSentCancelRef.current) {
-        return;
+    if (!userId && storedUser) {
+      try {
+        userId = JSON.parse(storedUser)?.user_id;
+      } catch {
+        userId = null;
       }
-
-      hasSentCancelRef.current = true;
-      cancelSession(sessionId, token, true).catch(() => {
-        hasSentCancelRef.current = false;
-      });
     }
+
+    let isMounted = true;
 
     async function loadSession(showLoader = false) {
       if (showLoader && isMounted) {
@@ -105,32 +93,20 @@ function WaitingRoomPage({
           return;
         }
 
-        if (sessionData?.status && sessionData.status !== 'waiting') {
-          shouldCloseRoomRef.current = false;
-          setPageError(getSessionStatusMessage(sessionData.status));
-          navigate('/home');
+        if (sessionData.status === 'active') {
+          navigate(`/sessions/${sessionId}/host`);
           return;
         }
 
-        shouldCloseRoomRef.current = true;
+        if (sessionData.status !== 'waiting') {
+          setPageError('Комната больше недоступна');
+          return;
+        }
+
         setSession(sessionData);
         setPageError('');
       } catch (error) {
         if (!isMounted) {
-          return;
-        }
-
-        shouldCloseRoomRef.current = false;
-
-        if (error.status === 404) {
-          setPageError('Комната не найдена');
-          navigate('/home');
-          return;
-        }
-
-        if (error.status === 403) {
-          setPageError('У вас нет доступа к этой комнате');
-          navigate('/home');
           return;
         }
 
@@ -142,23 +118,42 @@ function WaitingRoomPage({
       }
     }
 
+    function handleQuizStarted(payload = {}) {
+      const nextPath = payload.redirectHostTo || `/sessions/${sessionId}/host`;
+      navigate(nextPath);
+    }
+
     loadSession(true);
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    if (!joinedRoomRef.current && userId) {
+      socket.emit('join_session_room', {
+        sessionId: Number(sessionId),
+        userId: Number(userId),
+        role: 'host',
+      });
+      joinedRoomRef.current = true;
+    }
+
+    socket.on('quiz_started', handleQuizStarted);
 
     const intervalId = window.setInterval(() => {
       loadSession(false);
-    }, 1000);
-
-    window.addEventListener('pagehide', sendCancelRequest);
-    window.addEventListener('beforeunload', sendCancelRequest);
+    }, 3000);
 
     return () => {
       isMounted = false;
       window.clearInterval(intervalId);
-      window.removeEventListener('pagehide', sendCancelRequest);
-      window.removeEventListener('beforeunload', sendCancelRequest);
-      sendCancelRequest();
+      socket.off('quiz_started', handleQuizStarted);
+      joinedRoomRef.current = false;
+      if (socket.connected) {
+        socket.disconnect();
+      }
     };
-  }, [navigate, sessionId]);
+  }, [currentUser?.user_id, navigate, sessionId]);
 
   async function handleCopyCode() {
     if (!session?.room_code) {
@@ -173,8 +168,24 @@ function WaitingRoomPage({
     }
   }
 
-  function handleStartQuiz() {
-    setStartMessage('Запуск квиза будет реализован на следующем этапе');
+  async function handleStartQuiz() {
+    const token = sessionStorage.getItem('quizzy_token');
+
+    if (!token || !sessionId) {
+      setActionMessage('Требуется авторизация');
+      return;
+    }
+
+    try {
+      setIsStarting(true);
+      setActionMessage('');
+      await startSession(sessionId, token);
+      navigate(`/sessions/${sessionId}/host`);
+    } catch (error) {
+      setActionMessage(error.message || 'Не удалось начать квиз');
+    } finally {
+      setIsStarting(false);
+    }
   }
 
   if (isLoading) {
@@ -292,14 +303,19 @@ function WaitingRoomPage({
               )}
             </div>
 
-            {startMessage ? <p className="add-questions-page-message">{startMessage}</p> : null}
+            {actionMessage ? <p className="add-questions-page-message">{actionMessage}</p> : null}
 
             <div className="waiting-room-actions-stack">
-              <button type="button" className="waiting-room-start-btn" onClick={handleStartQuiz}>
+              <button
+                type="button"
+                className="waiting-room-start-btn"
+                onClick={handleStartQuiz}
+                disabled={isStarting}
+              >
                 <span className="waiting-room-start-icon">
                   <PlayIcon />
                 </span>
-                <span>Начать квиз</span>
+                <span>{isStarting ? 'Запуск...' : 'Начать квиз'}</span>
               </button>
             </div>
           </section>

@@ -36,8 +36,60 @@ export function startQuizSession(quizId, token) {
   });
 }
 
+export function startSession(sessionId, token) {
+  return request(`${API_URL}/sessions/${sessionId}/start`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export function getSessionById(sessionId, token) {
   return request(`${API_URL}/sessions/${sessionId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function getCurrentQuestion(sessionId, token) {
+  return request(`${API_URL}/sessions/${sessionId}/current-question`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function submitAnswer(sessionId, payload, token) {
+  return request(`${API_URL}/sessions/${sessionId}/answers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getLeaderboard(sessionId, token) {
+  return request(`${API_URL}/sessions/${sessionId}/leaderboard`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function getResults(sessionId, token) {
+  return request(`${API_URL}/sessions/${sessionId}/results`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function getLiveLeaderboard(sessionId, token) {
+  return request(`${API_URL}/sessions/${sessionId}/live-leaderboard`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

@@ -11,6 +11,7 @@ import WaitingRoomPage from './pages/WaitingRoomPage';
 import HostQuizPage from './pages/HostQuizPage';
 import ParticipantWaitingPage from './pages/ParticipantWaitingPage';
 import ParticipantQuizPage from './pages/ParticipantQuizPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 function readStoredUser() {
   const rawUser = sessionStorage.getItem('quizzy_user');
@@ -166,10 +167,7 @@ function App() {
         path="/sessions/:sessionId/waiting"
         element={
           <ProtectedRoute>
-            <WaitingRoomPage
-              {...protectedPageProps}
-              onOpenHostQuiz={() => navigate('/host-quiz')}
-            />
+            <WaitingRoomPage {...protectedPageProps} />
           </ProtectedRoute>
         }
       />
@@ -182,14 +180,37 @@ function App() {
         }
       />
       <Route
-        path="/host-quiz"
+        path="/sessions/:sessionId/host"
         element={
           <ProtectedRoute>
             <HostQuizPage {...protectedPageProps} />
           </ProtectedRoute>
         }
       />
-      <Route path="/participant-quiz" element={<ParticipantQuizPage />} />
+      <Route
+        path="/sessions/:sessionId/play"
+        element={
+          <ProtectedRoute>
+            <ParticipantQuizPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/results/:sessionId"
+        element={
+          <ProtectedRoute>
+            <LeaderboardPage {...protectedPageProps} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions/:sessionId/leaderboard"
+        element={
+          <ProtectedRoute>
+            <LeaderboardPage {...protectedPageProps} />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
