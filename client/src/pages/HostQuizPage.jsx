@@ -103,6 +103,9 @@ function HostQuizPage({
   onOpenHome,
   onOpenCreateQuiz,
   onJoinByCodeSuccess,
+  onOpenProfile,
+  onOpenResults,
+  onOpenMyQuizzes,
 }) {
   const navigate = useNavigate();
   const { sessionId } = useParams();
@@ -325,10 +328,14 @@ function HostQuizPage({
     <div className="host-quiz-page">
       <Header
         userName={currentUser?.name || 'Quizzy'}
+        userEmail={currentUser?.email || ''}
         onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
+        onOpenProfile={onOpenProfile}
+        onOpenResults={onOpenResults}
+        onOpenMyQuizzes={onOpenMyQuizzes}
       />
 
       <main className="host-quiz-main">

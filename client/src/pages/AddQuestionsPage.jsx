@@ -226,6 +226,9 @@ function AddQuestionsPage({
   onOpenHome,
   onOpenCreateQuiz,
   onJoinByCodeSuccess,
+  onOpenProfile,
+  onOpenResults,
+  onOpenMyQuizzes,
 }) {
   const navigate = useNavigate();
   const { quizId } = useParams();
@@ -697,10 +700,14 @@ function AddQuestionsPage({
       <div className="add-questions-page">
         <Header
           userName={currentUser?.name || 'Quizzy'}
+          userEmail={currentUser?.email || ''}
           onLogout={onLogout}
           onOpenHome={onOpenHome}
           onOpenCreateQuiz={onOpenCreateQuiz}
           onJoinByCodeSuccess={onJoinByCodeSuccess}
+          onOpenProfile={onOpenProfile}
+          onOpenResults={onOpenResults}
+          onOpenMyQuizzes={onOpenMyQuizzes}
         />
         <main className="add-questions-main">
           <div className="add-questions-container">
@@ -716,10 +723,14 @@ function AddQuestionsPage({
       <div className="add-questions-page">
         <Header
           userName={currentUser?.name || 'Quizzy'}
+          userEmail={currentUser?.email || ''}
           onLogout={onLogout}
           onOpenHome={onOpenHome}
           onOpenCreateQuiz={onOpenCreateQuiz}
           onJoinByCodeSuccess={onJoinByCodeSuccess}
+          onOpenProfile={onOpenProfile}
+          onOpenResults={onOpenResults}
+          onOpenMyQuizzes={onOpenMyQuizzes}
         />
         <main className="add-questions-main">
           <div className="add-questions-container">
@@ -734,10 +745,14 @@ function AddQuestionsPage({
     <div className="add-questions-page">
       <Header
         userName={currentUser?.name || 'Quizzy'}
+        userEmail={currentUser?.email || ''}
         onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
+        onOpenProfile={onOpenProfile}
+        onOpenResults={onOpenResults}
+        onOpenMyQuizzes={onOpenMyQuizzes}
       />
 
       <main className="add-questions-main">

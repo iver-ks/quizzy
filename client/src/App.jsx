@@ -12,6 +12,9 @@ import HostQuizPage from './pages/HostQuizPage';
 import ParticipantWaitingPage from './pages/ParticipantWaitingPage';
 import ParticipantQuizPage from './pages/ParticipantQuizPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+import ProfilePage from './pages/ProfilePage';
+import MyResultsPage from './pages/MyResultsPage';
+import MyQuizzesPage from './pages/MyQuizzesPage';
 
 function readStoredUser() {
   const rawUser = sessionStorage.getItem('quizzy_user');
@@ -81,7 +84,7 @@ function App() {
     sessionStorage.removeItem('quizzy_user');
     setCurrentUser(null);
     setCreatedQuiz(null);
-    navigate('/');
+    navigate('/login');
   };
 
   const handleJoinByCodeSuccess = ({ session_id: sessionId }) => {
@@ -98,6 +101,9 @@ function App() {
     onOpenHome: () => navigate('/home'),
     onOpenCreateQuiz: () => navigate('/create-quiz'),
     onJoinByCodeSuccess: handleJoinByCodeSuccess,
+    onOpenProfile: () => navigate('/profile'),
+    onOpenResults: () => navigate('/results'),
+    onOpenMyQuizzes: () => navigate('/my-quizzes'),
   };
 
   return (
@@ -192,6 +198,30 @@ function App() {
         element={
           <ProtectedRoute>
             <ParticipantQuizPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage {...protectedPageProps} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/results"
+        element={
+          <ProtectedRoute>
+            <MyResultsPage {...protectedPageProps} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-quizzes"
+        element={
+          <ProtectedRoute>
+            <MyQuizzesPage {...protectedPageProps} />
           </ProtectedRoute>
         }
       />

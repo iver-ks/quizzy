@@ -48,6 +48,9 @@ function WaitingRoomPage({
   onOpenHome,
   onOpenCreateQuiz,
   onJoinByCodeSuccess,
+  onOpenProfile,
+  onOpenResults,
+  onOpenMyQuizzes,
 }) {
   const navigate = useNavigate();
   const { sessionId } = useParams();
@@ -193,10 +196,14 @@ function WaitingRoomPage({
       <div className="waiting-room-page">
         <Header
           userName={currentUser?.name || 'Quizzy'}
+          userEmail={currentUser?.email || ''}
           onLogout={onLogout}
           onOpenHome={onOpenHome}
           onOpenCreateQuiz={onOpenCreateQuiz}
           onJoinByCodeSuccess={onJoinByCodeSuccess}
+          onOpenProfile={onOpenProfile}
+          onOpenResults={onOpenResults}
+          onOpenMyQuizzes={onOpenMyQuizzes}
         />
         <main className="waiting-room-main">
           <div className="waiting-room-container waiting-room-shell">
@@ -214,10 +221,14 @@ function WaitingRoomPage({
       <div className="waiting-room-page">
         <Header
           userName={currentUser?.name || 'Quizzy'}
+          userEmail={currentUser?.email || ''}
           onLogout={onLogout}
           onOpenHome={onOpenHome}
           onOpenCreateQuiz={onOpenCreateQuiz}
           onJoinByCodeSuccess={onJoinByCodeSuccess}
+          onOpenProfile={onOpenProfile}
+          onOpenResults={onOpenResults}
+          onOpenMyQuizzes={onOpenMyQuizzes}
         />
         <main className="waiting-room-main">
           <div className="waiting-room-container waiting-room-shell">
@@ -241,10 +252,14 @@ function WaitingRoomPage({
     <div className="waiting-room-page">
       <Header
         userName={currentUser?.name || 'Quizzy'}
+        userEmail={currentUser?.email || ''}
         onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
+        onOpenProfile={onOpenProfile}
+        onOpenResults={onOpenResults}
+        onOpenMyQuizzes={onOpenMyQuizzes}
       />
 
       <main className="waiting-room-main">

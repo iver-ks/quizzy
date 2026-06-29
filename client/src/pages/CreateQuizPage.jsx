@@ -88,6 +88,9 @@ function CreateQuizPage({
   onOpenCreateQuiz,
   onQuizSaved,
   onJoinByCodeSuccess,
+  onOpenProfile,
+  onOpenResults,
+  onOpenMyQuizzes,
 }) {
   const navigate = useNavigate();
   const { quizId } = useParams();
@@ -249,10 +252,14 @@ function CreateQuizPage({
     <div className="create-quiz-page">
       <Header
         userName={currentUser?.name || 'Quizzy'}
+        userEmail={currentUser?.email || ''}
         onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
+        onOpenProfile={onOpenProfile}
+        onOpenResults={onOpenResults}
+        onOpenMyQuizzes={onOpenMyQuizzes}
       />
 
       <main className="create-quiz-main">

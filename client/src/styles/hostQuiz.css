@@ -270,9 +270,9 @@
 }
 
 .host-leaderboard-row-highlighted {
-  border-color: #6c4ce3;
-  background: #f4efff;
-  box-shadow: 0 8px 20px rgba(108, 76, 227, 0.16);
+  border-color: rgba(108, 76, 227, 0.5);
+  background: rgba(244, 239, 255, 0.65);
+  box-shadow: 0 5px 14px rgba(108, 76, 227, 0.1);
 }
 
 .host-leaderboard-place {

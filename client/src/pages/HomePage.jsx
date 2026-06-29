@@ -56,7 +56,16 @@ function getQuestionWord(count) {
   return 'вопросов';
 }
 
-function HomePage({ currentUser, onLogout, onOpenHome, onOpenCreateQuiz, onJoinByCodeSuccess }) {
+function HomePage({
+  currentUser,
+  onLogout,
+  onOpenHome,
+  onOpenCreateQuiz,
+  onJoinByCodeSuccess,
+  onOpenProfile,
+  onOpenResults,
+  onOpenMyQuizzes,
+}) {
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES_LABEL);
   const [publicQuizzes, setPublicQuizzes] = useState([]);
@@ -178,10 +187,14 @@ function HomePage({ currentUser, onLogout, onOpenHome, onOpenCreateQuiz, onJoinB
     <div className="home-page">
       <Header
         userName={currentUser?.name || 'Quizzy'}
+        userEmail={currentUser?.email || ''}
         onLogout={onLogout}
         onOpenHome={onOpenHome}
         onOpenCreateQuiz={onOpenCreateQuiz}
         onJoinByCodeSuccess={onJoinByCodeSuccess}
+        onOpenProfile={onOpenProfile}
+        onOpenResults={onOpenResults}
+        onOpenMyQuizzes={onOpenMyQuizzes}
       />
 
       <main className="home-main">
