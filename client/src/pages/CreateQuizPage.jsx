@@ -192,7 +192,7 @@ function CreateQuizPage({
     }
   }
 
-  async function handleSubmit() {
+  async function saveQuiz(onSuccess) {
     const errors = validateQuizDraft(draft);
 
     if (categories.length === 0) {
@@ -229,7 +229,7 @@ function CreateQuizPage({
         : await createQuiz(payload, token);
 
       onQuizSaved?.(savedQuiz);
-      navigate(`/quizzes/${savedQuiz.quiz_id}/questions`);
+      onSuccess?.(savedQuiz);
     } catch (error) {
       const fieldMap = {
         title: 'title',
@@ -246,6 +246,18 @@ function CreateQuizPage({
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleSaveDraft() {
+    await saveQuiz(() => {
+      navigate('/my-quizzes');
+    });
+  }
+
+  async function handleSubmit() {
+    await saveQuiz((savedQuiz) => {
+      navigate(`/quizzes/${savedQuiz.quiz_id}/questions`);
+    });
   }
 
   return (
@@ -374,7 +386,12 @@ function CreateQuizPage({
               {formError ? <p className="create-quiz-form-error">{formError}</p> : null}
 
               <div className="create-quiz-actions-row">
-                <button type="button" className="create-quiz-secondary-btn" disabled>
+                <button
+                  type="button"
+                  className="create-quiz-secondary-btn"
+                  onClick={handleSaveDraft}
+                  disabled={isSubmitting || isLoading}
+                >
                   Сохранить черновик
                 </button>
                 <button

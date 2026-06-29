@@ -188,6 +188,93 @@ async function getMyQuizzes(req, res) {
   }
 }
 
+async function getPaginatedMyQuizzes(req, res) {
+  const page = Number.parseInt(req.query.page, 10);
+  const limit = Number.parseInt(req.query.limit, 10);
+  const normalizedPage = Number.isInteger(page) && page > 0 ? page : 1;
+  const normalizedLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : 3;
+  const offset = (normalizedPage - 1) * normalizedLimit;
+
+  try {
+    const result = await pool.query(
+      `SELECT
+         q.quiz_id,
+         q.title,
+         q.access_type,
+         COUNT(question_rows.question_id)::int AS questions_count,
+         EXISTS (
+           SELECT 1
+           FROM results r
+           JOIN quiz_sessions qs ON qs.session_id = r.session_id
+           WHERE qs.quiz_id = q.quiz_id
+         ) AS has_results
+       FROM quizzes q
+       LEFT JOIN questions question_rows ON question_rows.quiz_id = q.quiz_id
+       WHERE q.creator_id = $1
+       GROUP BY q.quiz_id, q.title, q.access_type, q.updated_at, q.created_at
+       ORDER BY COALESCE(q.updated_at, q.created_at) DESC, q.quiz_id DESC
+       LIMIT $2 OFFSET $3`,
+      [req.user.user_id, normalizedLimit + 1, offset]
+    );
+
+    const hasMore = result.rows.length > normalizedLimit;
+    const quizzes = hasMore ? result.rows.slice(0, normalizedLimit) : result.rows;
+
+    return res.json({
+      quizzes: quizzes.map((quiz) => ({
+        quiz_id: Number(quiz.quiz_id),
+        title: quiz.title,
+        access_type: quiz.access_type,
+        questions_count: Number(quiz.questions_count || 0),
+        has_results: Boolean(quiz.has_results),
+      })),
+      hasMore,
+    });
+  } catch (error) {
+    console.error('Get paginated my quizzes error:', error);
+    return res.status(500).json({ message: 'Ошибка сервера при получении моих квизов' });
+  }
+}
+
+async function getLatestQuizResultsSession(req, res) {
+  const quizId = Number(req.params.quizId);
+
+  if (!Number.isInteger(quizId) || quizId <= 0) {
+    return res.status(400).json({ message: 'Некорректный идентификатор квиза' });
+  }
+
+  try {
+    const ownership = await getOwnedQuiz(quizId, req.user.user_id);
+
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ message: ownership.error.message });
+    }
+
+    const result = await pool.query(
+      `SELECT qs.session_id
+       FROM results r
+       JOIN quiz_sessions qs ON qs.session_id = r.session_id
+       WHERE qs.quiz_id = $1
+       GROUP BY qs.session_id, qs.finished_at, qs.started_at, qs.created_at
+       ORDER BY COALESCE(qs.finished_at, qs.started_at, qs.created_at) DESC, qs.session_id DESC
+       LIMIT 1`,
+      [quizId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Для этого квиза пока нет результатов' });
+    }
+
+    return res.json({
+      session_id: Number(result.rows[0].session_id),
+      redirect_to: `/results/${Number(result.rows[0].session_id)}`,
+    });
+  } catch (error) {
+    console.error('Get latest quiz results session error:', error);
+    return res.status(500).json({ message: 'Ошибка сервера при получении результатов квиза' });
+  }
+}
+
 async function getQuizById(req, res) {
   const quizId = Number(req.params.quizId);
 
@@ -262,6 +349,8 @@ module.exports = {
   createQuiz,
   updateQuiz,
   getMyQuizzes,
+  getPaginatedMyQuizzes,
+  getLatestQuizResultsSession,
   getQuizById,
   getPublicWaitingQuizzes,
 };

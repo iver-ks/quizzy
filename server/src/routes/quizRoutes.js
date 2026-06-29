@@ -5,6 +5,7 @@ const {
   updateQuiz,
   getMyQuizzes,
   getQuizById,
+  getLatestQuizResultsSession,
   getPublicWaitingQuizzes,
 } = require('../controllers/quizController');
 const { getQuizQuestions, createQuestion } = require('../controllers/questionController');
@@ -15,6 +16,7 @@ const router = express.Router();
 router.post('/', authMiddleware, createQuiz);
 router.get('/my', authMiddleware, getMyQuizzes);
 router.get('/public-waiting', getPublicWaitingQuizzes);
+router.get('/:quizId/results-session', authMiddleware, getLatestQuizResultsSession);
 router.get('/:quizId/questions', authMiddleware, getQuizQuestions);
 router.post('/:quizId/questions', authMiddleware, createQuestion);
 router.post('/:quizId/start-session', authMiddleware, startQuizSession);

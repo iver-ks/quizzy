@@ -15,6 +15,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import MyResultsPage from './pages/MyResultsPage';
 import MyQuizzesPage from './pages/MyQuizzesPage';
+import QuizResultsPlaceholderPage from './pages/QuizResultsPlaceholderPage';
 
 function readStoredUser() {
   const rawUser = sessionStorage.getItem('quizzy_user');
@@ -222,6 +223,14 @@ function App() {
         element={
           <ProtectedRoute>
             <MyQuizzesPage {...protectedPageProps} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/quizzes/:quizId/results"
+        element={
+          <ProtectedRoute>
+            <QuizResultsPlaceholderPage {...protectedPageProps} />
           </ProtectedRoute>
         }
       />

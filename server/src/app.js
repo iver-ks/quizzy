@@ -10,6 +10,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const resultsRoutes = require('./routes/resultsRoutes');
+const myQuizzesRoutes = require('./routes/myQuizzesRoutes');
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/results', resultsRoutes);
+app.use('/api/my-quizzes', myQuizzesRoutes);
 
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {

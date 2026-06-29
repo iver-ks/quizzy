@@ -53,8 +53,24 @@ export function updateQuiz(quizId, payload, token) {
   });
 }
 
-export function getMyQuizzes(token) {
-  return request(`${API_URL}/quizzes/my`, {
+export function getMyQuizzes(pageOrToken, limit, maybeToken) {
+  if (typeof pageOrToken === 'string' && !maybeToken) {
+    return request(`${API_URL}/quizzes/my`, {
+      headers: {
+        Authorization: `Bearer ${pageOrToken}`,
+      },
+    });
+  }
+
+  const page = Number.isInteger(pageOrToken) && pageOrToken > 0 ? pageOrToken : 1;
+  const normalizedLimit = Number.isInteger(limit) && limit > 0 ? limit : 3;
+  const token = maybeToken;
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(normalizedLimit),
+  });
+
+  return request(`${API_URL}/my-quizzes?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -76,5 +92,13 @@ export function getPublicWaitingQuizzes(token) {
           Authorization: `Bearer ${token}`,
         }
       : {},
+  });
+}
+
+export function getQuizResultsSession(quizId, token) {
+  return request(`${API_URL}/quizzes/${quizId}/results-session`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }
