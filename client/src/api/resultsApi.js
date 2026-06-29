@@ -1,0 +1,50 @@
+const API_URL = 'http://localhost:5000/api';
+const NETWORK_ERROR_MESSAGE = 'Сервер временно недоступен. Попробуйте позже.';
+
+async function parseResponse(response) {
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(data.message || 'Ошибка запроса');
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+async function request(url, options = {}) {
+  try {
+    const response = await fetch(url, options);
+    return await parseResponse(response);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(NETWORK_ERROR_MESSAGE);
+    }
+
+    throw error;
+  }
+}
+
+export function getMyResults(token, page = 1, limit = 5) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  return request(`${API_URL}/results?${params.toString()}`, {
+    headers,
+  }).catch((error) => {
+    if (error.status !== 404) {
+      throw error;
+    }
+
+    return request(`${API_URL}/profile/results?${params.toString()}`, {
+      headers,
+    });
+  });
+}

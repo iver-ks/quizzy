@@ -157,8 +157,15 @@
 
 .profile-result-copy span,
 .profile-result-meta span {
-  color: #a0a8c0;
   font-size: 0.95rem;
+}
+
+.profile-result-date {
+  color: #a0a8c0;
+}
+
+.profile-result-place {
+  color: #41465c;
 }
 
 .profile-result-meta {
@@ -168,7 +175,7 @@
 
 .profile-result-meta strong {
   color: #6c4ce6;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .profile-results-empty {

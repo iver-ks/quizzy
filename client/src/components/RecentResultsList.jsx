@@ -31,11 +31,11 @@ function RecentResultsList({ title = 'Последние результаты', 
             <article key={`${item.quizTitle}-${item.date}-${index}`} className="profile-result-item">
               <div className="profile-result-copy">
                 <strong>{item.quizTitle}</strong>
-                <span>{formatResultDate(item.date)}</span>
+                <span className="profile-result-date">{formatResultDate(item.date)}</span>
               </div>
               <div className="profile-result-meta">
                 <strong>{new Intl.NumberFormat('ru-RU').format(item.score)} очков</strong>
-                <span>
+                <span className="profile-result-place">
                   #{item.place} из {item.participantsCount}
                 </span>
               </div>
